@@ -9,7 +9,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
-    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     Forecast,
     WeatherEntity,

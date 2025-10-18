@@ -1,7 +1,6 @@
 """Fixtures for INMET Weather integration tests."""
 
-import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME

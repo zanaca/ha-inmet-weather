@@ -2,14 +2,14 @@
 
 import os
 import sys
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from custom_components.inmet_weather.api import InmetApiClient
+from custom_components.inmet_weather.api import InmetApiClient  # noqa: E402
 
 
 @pytest.mark.asyncio

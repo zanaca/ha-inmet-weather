@@ -1,8 +1,7 @@
 """Simple fixtures for INMET Weather integration tests (no HA dependency)."""
 
-import json
 import tempfile
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
