@@ -1,10 +1,12 @@
 """INMET Weather API Client."""
 
 import asyncio
+from datetime import datetime
 import json
 import logging
 import math
 import os
+import tempfile
 import time
 from typing import Any, Dict, Optional
 
@@ -33,9 +35,6 @@ class InmetApiClient:
         """
         self._session = session
         if cache_dir is None:
-            # Use temp directory by default (good for tests)
-            import tempfile
-
             cache_dir = tempfile.gettempdir()
         self._cache_dir = cache_dir
         self._cache_file = os.path.join(self._cache_dir, GEOCODE_CACHE_FILE)
@@ -133,7 +132,14 @@ class InmetApiClient:
         try:
             async with async_timeout.timeout(TIMEOUT):
                 url = f"{API_BASE_URL}/Previsao_Portal"
-                async with self._session.get(url) as response:
+                async with self._session.post(
+                    url,
+                    json={
+                        "data": datetime.now().astimezone().isoformat().split("T")[0],
+                        "tipo": "turno",
+                        "turno": "tarde",
+                    },
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
 
