@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with Brazilian flag colors -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0066CC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#003D7A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGradient)"/>
+
+  <!-- Sun (partial) -->
+  <circle cx="180" cy="200" r="70" fill="#FFD700"/>
+
+  <!-- Cloud -->
+  <g fill="#FFFFFF">
+    <!-- Main cloud body -->
+    <ellipse cx="280" cy="260" rx="90" ry="60"/>
+    <ellipse cx="320" cy="280" rx="70" ry="50"/>
+    <ellipse cx="240" cy="280" rx="70" ry="50"/>
+    <circle cx="280" cy="240" r="50"/>
+  </g>
+
+  <!-- Rain drops -->
+  <g fill="#87CEEB" opacity="0.8">
+    <ellipse cx="240" cy="340" rx="8" ry="15"/>
+    <ellipse cx="280" cy="360" rx="8" ry="15"/>
+    <ellipse cx="320" cy="340" rx="8" ry="15"/>
+  </g>
+
+  <!-- INMET text (small) -->
+  <text x="256" y="440" font-family="Arial, sans-serif" font-size="36" font-weight="bold"
+        fill="#FFFFFF" text-anchor="middle">INMET</text>
+</svg>
