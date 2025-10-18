@@ -133,12 +133,7 @@ jobs:
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
 
           # Create annotated tag
-          git tag -a "${NEW_VERSION}" -m "Release ${NEW_VERSION}
-
-PR #${PR_NUMBER}: ${PR_TITLE}
-Author: @${PR_AUTHOR}
-
-Automatically created by Auto Tag workflow"
+          git tag -a "${NEW_VERSION}" -m "Release ${NEW_VERSION}\n\nPR #${PR_NUMBER}: ${PR_TITLE}\nAuthor: @${PR_AUTHOR}\n\nAutomatically created by Auto Tag workflow"
 
           git push origin "${NEW_VERSION}"
           echo "Created and pushed tag: ${NEW_VERSION}"
