@@ -1,29 +1,20 @@
 """Tests for INMET Weather entity."""
 
-import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_NATIVE_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_HUMIDITY,
-)
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    UnitOfPressure,
-    UnitOfSpeed,
-    UnitOfTemperature,
-)
+import pytest
+from homeassistant.components.weather import (ATTR_FORECAST_CONDITION,
+                                              ATTR_FORECAST_HUMIDITY,
+                                              ATTR_FORECAST_NATIVE_TEMP,
+                                              ATTR_FORECAST_NATIVE_TEMP_LOW,
+                                              ATTR_FORECAST_TIME)
+from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
+                                 UnitOfPressure, UnitOfSpeed,
+                                 UnitOfTemperature)
 
-from custom_components.inmet_weather.weather import (
-    InmetWeatherEntity,
-    InmetWeatherCoordinator,
-)
+from custom_components.inmet_weather.weather import (InmetWeatherCoordinator,
+                                                     InmetWeatherEntity)
 
 
 @pytest.fixture
@@ -357,6 +348,7 @@ async def test_coordinator_update_success(
 async def test_coordinator_update_failure(mock_hass):
     """Test coordinator handles update failure."""
     from unittest.mock import patch
+
     from homeassistant.helpers.update_coordinator import UpdateFailed
 
     mock_client = AsyncMock()
@@ -375,6 +367,7 @@ async def test_coordinator_update_failure(mock_hass):
 async def test_coordinator_update_exception(mock_hass):
     """Test coordinator handles exceptions during update."""
     from unittest.mock import patch
+
     from homeassistant.helpers.update_coordinator import UpdateFailed
 
     mock_client = AsyncMock()

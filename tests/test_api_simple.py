@@ -1,9 +1,10 @@
 """Simple tests for INMET Weather API client (no HA dependency)."""
 
-import pytest
-import sys
 import os
-from unittest.mock import AsyncMock, MagicMock, patch, ANY
+import sys
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
+
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

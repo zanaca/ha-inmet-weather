@@ -150,8 +150,9 @@ def mock_config_entry():
 @pytest.fixture
 def mock_hass():
     """Mock Home Assistant instance."""
-    from homeassistant.core import HomeAssistant
     from unittest.mock import MagicMock
+
+    from homeassistant.core import HomeAssistant
 
     hass = MagicMock(spec=HomeAssistant)
     hass.config.latitude = -22.9068

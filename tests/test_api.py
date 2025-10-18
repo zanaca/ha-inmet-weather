@@ -1,7 +1,8 @@
 """Tests for INMET Weather API client."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from aiohttp import ClientSession
 
 from custom_components.inmet_weather.api import InmetApiClient

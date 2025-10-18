@@ -4,33 +4,23 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_NATIVE_TEMP_LOW,
-    ATTR_FORECAST_NATIVE_WIND_SPEED,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_HUMIDITY,
-    Forecast,
-    WeatherEntity,
-)
+from homeassistant.components.weather import (ATTR_FORECAST_CONDITION,
+                                              ATTR_FORECAST_HUMIDITY,
+                                              ATTR_FORECAST_NATIVE_TEMP,
+                                              ATTR_FORECAST_NATIVE_TEMP_LOW,
+                                              ATTR_FORECAST_NATIVE_WIND_SPEED,
+                                              ATTR_FORECAST_TIME, Forecast,
+                                              WeatherEntity)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    UnitOfPressure,
-    UnitOfSpeed,
-    UnitOfTemperature,
-)
+from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
+                                 UnitOfPressure, UnitOfSpeed,
+                                 UnitOfTemperature)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import (CoordinatorEntity,
+                                                      DataUpdateCoordinator,
+                                                      UpdateFailed)
 
 from .api import InmetApiClient
 from .const import CONDITION_MAP, DOMAIN, UPDATE_INTERVAL

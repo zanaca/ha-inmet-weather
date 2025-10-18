@@ -1,17 +1,14 @@
 """Tests for INMET Weather integration initialization."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
-from custom_components.inmet_weather import (
-    async_setup,
-    async_setup_entry,
-    async_unload_entry,
-    DOMAIN,
-)
+from custom_components.inmet_weather import (DOMAIN, async_setup,
+                                             async_setup_entry,
+                                             async_unload_entry)
 
 
 @pytest.mark.asyncio
