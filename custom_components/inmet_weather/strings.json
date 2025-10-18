@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "INMET Weather",
+        "description": "Configure INMET Weather integration",
+        "data": {
+          "name": "Name",
+          "latitude": "Latitude",
+          "longitude": "Longitude"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to INMET API",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Location is already configured"
+    }
+  }
+}

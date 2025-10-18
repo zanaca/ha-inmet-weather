@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-test.txt
+
+    - name: Run tests
+      run: |
+        pytest
+
+    - name: Validate version match
+      run: |
+        VERSION="${{ github.event.release.tag_name }}"
+        VERSION="${VERSION#v}"
+        MANIFEST_VERSION=$(python -c "import json; print(json.load(open('custom_components/inmet_weather/manifest.json'))['version'])")
+        if [ "$VERSION" != "$MANIFEST_VERSION" ]; then
+          echo "Version mismatch: Release $VERSION != Manifest $MANIFEST_VERSION"
+          exit 1
+        fi
+
+  release:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Create ZIP file
+      run: |
+        cd custom_components
+        zip -r ../inmet_weather.zip inmet_weather/
+
+    - name: Upload ZIP to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./inmet_weather.zip
+        asset_name: inmet_weather.zip
+        asset_content_type: application/zip

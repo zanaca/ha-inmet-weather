@@ -1,0 +1,12 @@
+{
+  "domain": "inmet_weather",
+  "name": "INMET Weather",
+  "documentation": "https://github.com/zanaca/ha-inmet-weather",
+  "issue_tracker": "https://github.com/zanaca/ha-inmet-weather/issues",
+  "codeowners": ["@zanaca"],
+  "config_flow": true,
+  "dependencies": [],
+  "requirements": [],
+  "version": "1.0.0",
+  "iot_class": "cloud_polling"
+}
