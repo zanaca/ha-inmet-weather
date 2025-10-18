@@ -49,7 +49,7 @@ async def async_setup_entry(
     geocode = config_entry.data["geocode"]
 
     session = aiohttp_client.async_get_clientsession(hass)
-    client = InmetApiClient(session)
+    client = InmetApiClient(session, cache_dir=hass.config.config_dir)
 
     coordinator = InmetWeatherCoordinator(hass, client, geocode)
     await coordinator.async_config_entry_first_refresh()

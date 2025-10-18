@@ -7,10 +7,44 @@ from custom_components.inmet_weather.api import InmetApiClient
 
 
 @pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_rio():
-    """Test geocode detection for Rio de Janeiro."""
+async def test_get_geocode_from_coordinates_rio(temp_cache_dir):
+    """Test geocode detection for Rio de Janeiro using real API response."""
     session = MagicMock(spec=ClientSession)
-    client = InmetApiClient(session)
+
+    # Mock real Previsao_Portal API response with multiple cities
+    mock_api_data = {
+        "3304557": {
+            "nome": "Rio de Janeiro",
+            "uf": "RJ",
+            "centroide": {
+                "lat": -22.9068,
+                "lon": -43.1729
+            }
+        },
+        "3550308": {
+            "nome": "São Paulo",
+            "uf": "SP",
+            "centroide": {
+                "lat": -23.5505,
+                "lon": -46.6333
+            }
+        },
+        "5300108": {
+            "nome": "Brasília",
+            "uf": "DF",
+            "centroide": {
+                "lat": -15.7939,
+                "lon": -47.8828
+            }
+        }
+    }
+
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value=mock_api_data)
+    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+
+    client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
     # Test coordinates near Rio de Janeiro
     geocode = await client.get_geocode_from_coordinates(-22.9068, -43.1729)
@@ -19,10 +53,35 @@ async def test_get_geocode_from_coordinates_rio():
 
 
 @pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_sao_paulo():
-    """Test geocode detection for São Paulo."""
+async def test_get_geocode_from_coordinates_sao_paulo(temp_cache_dir):
+    """Test geocode detection for São Paulo using real API response."""
     session = MagicMock(spec=ClientSession)
-    client = InmetApiClient(session)
+
+    # Mock real Previsao_Portal API response
+    mock_api_data = {
+        "3304557": {
+            "nome": "Rio de Janeiro",
+            "uf": "RJ",
+            "centroide": {"lat": -22.9068, "lon": -43.1729}
+        },
+        "3550308": {
+            "nome": "São Paulo",
+            "uf": "SP",
+            "centroide": {"lat": -23.5505, "lon": -46.6333}
+        },
+        "5300108": {
+            "nome": "Brasília",
+            "uf": "DF",
+            "centroide": {"lat": -15.7939, "lon": -47.8828}
+        }
+    }
+
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value=mock_api_data)
+    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+
+    client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
     # Test coordinates near São Paulo
     geocode = await client.get_geocode_from_coordinates(-23.5505, -46.6333)
@@ -31,10 +90,35 @@ async def test_get_geocode_from_coordinates_sao_paulo():
 
 
 @pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_brasilia():
-    """Test geocode detection for Brasília."""
+async def test_get_geocode_from_coordinates_brasilia(temp_cache_dir):
+    """Test geocode detection for Brasília using real API response."""
     session = MagicMock(spec=ClientSession)
-    client = InmetApiClient(session)
+
+    # Mock real Previsao_Portal API response
+    mock_api_data = {
+        "3304557": {
+            "nome": "Rio de Janeiro",
+            "uf": "RJ",
+            "centroide": {"lat": -22.9068, "lon": -43.1729}
+        },
+        "3550308": {
+            "nome": "São Paulo",
+            "uf": "SP",
+            "centroide": {"lat": -23.5505, "lon": -46.6333}
+        },
+        "5300108": {
+            "nome": "Brasília",
+            "uf": "DF",
+            "centroide": {"lat": -15.7939, "lon": -47.8828}
+        }
+    }
+
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value=mock_api_data)
+    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+
+    client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
     # Test coordinates near Brasília
     geocode = await client.get_geocode_from_coordinates(-15.7939, -47.8828)
@@ -43,10 +127,19 @@ async def test_get_geocode_from_coordinates_brasilia():
 
 
 @pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_fallback():
-    """Test geocode detection finds nearest city even for distant coordinates."""
+async def test_get_geocode_from_coordinates_fallback(temp_cache_dir):
+    """Test geocode detection falls back to distance calculation when API fails."""
     session = MagicMock(spec=ClientSession)
-    client = InmetApiClient(session)
+
+    # Mock API failure to test fallback mechanism
+    mock_response = AsyncMock()
+    mock_response.status = 404
+    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_response.__aexit__ = AsyncMock(return_value=None)
+
+    session.get = MagicMock(return_value=mock_response)
+
+    client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
     # Test coordinates in the middle of the ocean (0,0 - Gulf of Guinea)
     # Algorithm should find Natal as it's the closest Brazilian city to the equator
@@ -57,10 +150,16 @@ async def test_get_geocode_from_coordinates_fallback():
 
 
 @pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_error():
+async def test_get_geocode_from_coordinates_error(temp_cache_dir):
     """Test geocode detection handles errors."""
     session = MagicMock(spec=ClientSession)
-    client = InmetApiClient(session)
+
+    # Mock API failure
+    mock_response = AsyncMock()
+    mock_response.status = 500
+    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+
+    client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
     with patch.object(client, "calculate_distance", side_effect=Exception("Test error")):
         geocode = await client.get_geocode_from_coordinates(-22.9068, -43.1729)

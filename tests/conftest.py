@@ -1,5 +1,6 @@
 """Simple fixtures for INMET Weather integration tests (no HA dependency)."""
 import json
+import tempfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -8,6 +9,13 @@ import pytest
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
 CONF_NAME = "name"
+
+
+@pytest.fixture
+def temp_cache_dir():
+    """Create a temporary directory for cache files."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        yield tmpdir
 
 
 @pytest.fixture

@@ -47,10 +47,15 @@ async def test_get_geocode_from_coordinates_brasilia():
 
 
 @pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_error():
+async def test_get_geocode_from_coordinates_error(temp_cache_dir):
     """Test geocode detection handles errors."""
     session = MagicMock()
-    client = InmetApiClient(session)
+    client = InmetApiClient(session, cache_dir=temp_cache_dir)
+
+    # Mock both API call and distance calculation to fail
+    mock_response = AsyncMock()
+    mock_response.status = 500
+    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
 
     with patch.object(client, "calculate_distance", side_effect=Exception("Test error")):
         geocode = await client.get_geocode_from_coordinates(-22.9068, -43.1729)
