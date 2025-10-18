@@ -1,4 +1,5 @@
 """Tests for INMET Weather API client."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientSession
@@ -16,33 +17,26 @@ async def test_get_geocode_from_coordinates_rio(temp_cache_dir):
         "3304557": {
             "nome": "Rio de Janeiro",
             "uf": "RJ",
-            "centroide": {
-                "lat": -22.9068,
-                "lon": -43.1729
-            }
+            "centroide": {"lat": -22.9068, "lon": -43.1729},
         },
         "3550308": {
             "nome": "São Paulo",
             "uf": "SP",
-            "centroide": {
-                "lat": -23.5505,
-                "lon": -46.6333
-            }
+            "centroide": {"lat": -23.5505, "lon": -46.6333},
         },
         "5300108": {
             "nome": "Brasília",
             "uf": "DF",
-            "centroide": {
-                "lat": -15.7939,
-                "lon": -47.8828
-            }
-        }
+            "centroide": {"lat": -15.7939, "lon": -47.8828},
+        },
     }
 
     mock_response = AsyncMock()
     mock_response.status = 200
     mock_response.json = AsyncMock(return_value=mock_api_data)
-    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+    session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
 
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
@@ -62,24 +56,26 @@ async def test_get_geocode_from_coordinates_sao_paulo(temp_cache_dir):
         "3304557": {
             "nome": "Rio de Janeiro",
             "uf": "RJ",
-            "centroide": {"lat": -22.9068, "lon": -43.1729}
+            "centroide": {"lat": -22.9068, "lon": -43.1729},
         },
         "3550308": {
             "nome": "São Paulo",
             "uf": "SP",
-            "centroide": {"lat": -23.5505, "lon": -46.6333}
+            "centroide": {"lat": -23.5505, "lon": -46.6333},
         },
         "5300108": {
             "nome": "Brasília",
             "uf": "DF",
-            "centroide": {"lat": -15.7939, "lon": -47.8828}
-        }
+            "centroide": {"lat": -15.7939, "lon": -47.8828},
+        },
     }
 
     mock_response = AsyncMock()
     mock_response.status = 200
     mock_response.json = AsyncMock(return_value=mock_api_data)
-    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+    session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
 
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
@@ -99,24 +95,26 @@ async def test_get_geocode_from_coordinates_brasilia(temp_cache_dir):
         "3304557": {
             "nome": "Rio de Janeiro",
             "uf": "RJ",
-            "centroide": {"lat": -22.9068, "lon": -43.1729}
+            "centroide": {"lat": -22.9068, "lon": -43.1729},
         },
         "3550308": {
             "nome": "São Paulo",
             "uf": "SP",
-            "centroide": {"lat": -23.5505, "lon": -46.6333}
+            "centroide": {"lat": -23.5505, "lon": -46.6333},
         },
         "5300108": {
             "nome": "Brasília",
             "uf": "DF",
-            "centroide": {"lat": -15.7939, "lon": -47.8828}
-        }
+            "centroide": {"lat": -15.7939, "lon": -47.8828},
+        },
     }
 
     mock_response = AsyncMock()
     mock_response.status = 200
     mock_response.json = AsyncMock(return_value=mock_api_data)
-    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+    session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
 
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
@@ -157,11 +155,15 @@ async def test_get_geocode_from_coordinates_error(temp_cache_dir):
     # Mock API failure
     mock_response = AsyncMock()
     mock_response.status = 500
-    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+    session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
 
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
-    with patch.object(client, "calculate_distance", side_effect=Exception("Test error")):
+    with patch.object(
+        client, "calculate_distance", side_effect=Exception("Test error")
+    ):
         geocode = await client.get_geocode_from_coordinates(-22.9068, -43.1729)
         assert geocode is None
 

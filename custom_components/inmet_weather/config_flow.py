@@ -1,4 +1,5 @@
 """Config flow for INMET Weather integration."""
+
 import logging
 from typing import Any, Dict, Optional
 
@@ -66,9 +67,7 @@ class InmetWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_NAME, default="INMET Weather"
-                    ): cv.string,
+                    vol.Optional(CONF_NAME, default="INMET Weather"): cv.string,
                     vol.Optional(
                         CONF_LATITUDE, default=self.hass.config.latitude
                     ): cv.latitude,

@@ -1,11 +1,12 @@
 """Simple tests for INMET Weather API client (no HA dependency)."""
+
 import pytest
 import sys
 import os
 from unittest.mock import AsyncMock, MagicMock, patch, ANY
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from custom_components.inmet_weather.api import InmetApiClient
 
@@ -55,9 +56,13 @@ async def test_get_geocode_from_coordinates_error(temp_cache_dir):
     # Mock both API call and distance calculation to fail
     mock_response = AsyncMock()
     mock_response.status = 500
-    session.get = MagicMock(return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)))
+    session.get = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
 
-    with patch.object(client, "calculate_distance", side_effect=Exception("Test error")):
+    with patch.object(
+        client, "calculate_distance", side_effect=Exception("Test error")
+    ):
         geocode = await client.get_geocode_from_coordinates(-22.9068, -43.1729)
         assert geocode is None
 
@@ -70,15 +75,17 @@ async def test_get_current_weather_success():
 
     mock_response = MagicMock()
     mock_response.status = 200
-    mock_response.json = AsyncMock(return_value={
-        "dados": {
-            "TEM_INS": "29",
-            "UMD_INS": "61",
-            "PRE_INS": "1008.3",
-            "VEN_VEL": "1.7",
-            "VEN_RAJ": "5.2",
+    mock_response.json = AsyncMock(
+        return_value={
+            "dados": {
+                "TEM_INS": "29",
+                "UMD_INS": "61",
+                "PRE_INS": "1008.3",
+                "VEN_VEL": "1.7",
+                "VEN_RAJ": "5.2",
+            }
         }
-    })
+    )
 
     # Create a proper async context manager
     mock_context = MagicMock()
@@ -122,16 +129,18 @@ async def test_get_forecast_success():
 
     mock_response = MagicMock()
     mock_response.status = 200
-    mock_response.json = AsyncMock(return_value={
-        "3304557": {
-            "17/10/2025": {
-                "manha": {
-                    "resumo": "Muitas nuvens",
-                    "temp_max": 32,
+    mock_response.json = AsyncMock(
+        return_value={
+            "3304557": {
+                "17/10/2025": {
+                    "manha": {
+                        "resumo": "Muitas nuvens",
+                        "temp_max": 32,
+                    }
                 }
             }
         }
-    })
+    )
 
     mock_context = MagicMock()
     mock_context.__aenter__ = AsyncMock(return_value=mock_response)

@@ -1,4 +1,5 @@
 """Fixtures for INMET Weather integration tests."""
+
 import json
 from unittest.mock import AsyncMock, patch
 

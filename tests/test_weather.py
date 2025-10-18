@@ -1,4 +1,5 @@
 """Tests for INMET Weather entity."""
+
 import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -209,7 +210,10 @@ def test_weather_entity_forecast(mock_coordinator):
     # Check first forecast item
     first_item = forecast[0]
     assert ATTR_FORECAST_TIME in first_item
-    assert ATTR_FORECAST_NATIVE_TEMP in first_item or ATTR_FORECAST_NATIVE_TEMP_LOW in first_item
+    assert (
+        ATTR_FORECAST_NATIVE_TEMP in first_item
+        or ATTR_FORECAST_NATIVE_TEMP_LOW in first_item
+    )
 
     # Check that we have forecasts for different periods
     assert any("manha" in str(item) for item in forecast) or len(forecast) > 0
@@ -324,12 +328,16 @@ def test_weather_entity_invalid_humidity():
 
 
 @pytest.mark.asyncio
-async def test_coordinator_update_success(mock_hass, mock_current_weather_response, mock_forecast_response):
+async def test_coordinator_update_success(
+    mock_hass, mock_current_weather_response, mock_forecast_response
+):
     """Test coordinator data update success."""
     from unittest.mock import patch
 
     mock_client = AsyncMock()
-    mock_client.get_current_weather = AsyncMock(return_value=mock_current_weather_response)
+    mock_client.get_current_weather = AsyncMock(
+        return_value=mock_current_weather_response
+    )
     mock_client.get_forecast = AsyncMock(return_value=mock_forecast_response)
 
     # Patch frame.report_usage to avoid "Frame helper not set up" error

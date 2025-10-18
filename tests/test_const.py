@@ -1,4 +1,5 @@
 """Tests for INMET Weather constants."""
+
 from custom_components.inmet_weather.const import (
     CONDITION_MAP,
     DEFAULT_NAME,

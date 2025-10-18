@@ -1,4 +1,5 @@
 """Tests for INMET Weather integration initialization."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 

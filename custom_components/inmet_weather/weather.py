@@ -1,4 +1,5 @@
 """Weather platform for INMET Weather integration."""
+
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -257,7 +258,9 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
                             else:
                                 hour = 18
 
-                            forecast_time = date_obj.replace(hour=hour, minute=0, second=0)
+                            forecast_time = date_obj.replace(
+                                hour=hour, minute=0, second=0
+                            )
 
                             # Get condition
                             resumo = period_data.get("resumo", "").lower()
@@ -270,7 +273,9 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
                             forecast_item: Forecast = {
                                 ATTR_FORECAST_TIME: forecast_time.isoformat(),
                                 ATTR_FORECAST_NATIVE_TEMP: period_data.get("temp_max"),
-                                ATTR_FORECAST_NATIVE_TEMP_LOW: period_data.get("temp_min"),
+                                ATTR_FORECAST_NATIVE_TEMP_LOW: period_data.get(
+                                    "temp_min"
+                                ),
                             }
 
                             if condition:
@@ -278,7 +283,9 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
 
                             # Add humidity if available
                             if "umidade_max" in period_data:
-                                forecast_item[ATTR_FORECAST_HUMIDITY] = period_data["umidade_max"]
+                                forecast_item[ATTR_FORECAST_HUMIDITY] = period_data[
+                                    "umidade_max"
+                                ]
 
                             forecasts.append(forecast_item)
 
