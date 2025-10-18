@@ -4,17 +4,26 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant.components.weather import (ATTR_FORECAST_CONDITION,
-                                              ATTR_FORECAST_HUMIDITY,
-                                              ATTR_FORECAST_NATIVE_TEMP,
-                                              ATTR_FORECAST_NATIVE_TEMP_LOW,
-                                              ATTR_FORECAST_TIME)
-from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
-                                 UnitOfPressure, UnitOfSpeed,
-                                 UnitOfTemperature)
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_TIME,
+)
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 
-from custom_components.inmet_weather.weather import (InmetWeatherCoordinator,
-                                                     InmetWeatherEntity)
+from custom_components.inmet_weather.weather import (
+    InmetWeatherCoordinator,
+    InmetWeatherEntity,
+)
 
 
 @pytest.fixture

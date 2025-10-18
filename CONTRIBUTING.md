@@ -50,11 +50,6 @@ pytest tests/test_api.py::test_get_geocode_from_coordinates_rio
 black custom_components tests
 ```
 
-### Sort imports with isort
-```bash
-isort custom_components tests
-```
-
 ### Lint with flake8
 ```bash
 flake8 custom_components tests --max-line-length=100
@@ -95,7 +90,6 @@ mypy custom_components
    ```bash
    pytest
    black custom_components tests
-   isort custom_components tests
    flake8 custom_components tests --max-line-length=100
    ```
 

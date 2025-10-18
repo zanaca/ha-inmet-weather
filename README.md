@@ -135,9 +135,6 @@ pytest tests/test_api.py
 # Format code
 black custom_components tests
 
-# Sort imports
-isort custom_components tests
-
 # Lint
 flake8 custom_components tests --max-line-length=100
 ```
