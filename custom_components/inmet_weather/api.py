@@ -1,5 +1,6 @@
 """INMET Weather API Client."""
 
+import asyncio
 import json
 import logging
 import math
@@ -39,10 +40,11 @@ class InmetApiClient:
         self._cache_dir = cache_dir
         self._cache_file = os.path.join(self._cache_dir, GEOCODE_CACHE_FILE)
         self._geocode_cache: Dict[str, Dict[str, Any]] = {}
-        self._load_cache()
+        # Cache will be loaded on first use to avoid blocking I/O in __init__
+        self._cache_loaded = False
 
-    def _load_cache(self) -> None:
-        """Load geocode cache from file."""
+    def _load_cache_sync(self) -> None:
+        """Load geocode cache from file (synchronous helper)."""
         try:
             if os.path.exists(self._cache_file):
                 with open(self._cache_file, "r") as f:
@@ -52,8 +54,21 @@ class InmetApiClient:
             _LOGGER.warning("Failed to load geocode cache: %s", err)
             self._geocode_cache = {}
 
-    def _save_cache(self) -> None:
-        """Save geocode cache to file."""
+    async def _load_cache(self) -> None:
+        """Load geocode cache from file (async)."""
+        if self._cache_loaded:
+            return
+
+        try:
+            # Run blocking I/O in executor to avoid blocking event loop
+            await asyncio.to_thread(self._load_cache_sync)
+            self._cache_loaded = True
+        except Exception as err:
+            _LOGGER.warning("Failed to load geocode cache: %s", err)
+            self._geocode_cache = {}
+
+    def _save_cache_sync(self) -> None:
+        """Save geocode cache to file (synchronous helper)."""
         try:
             # Ensure cache directory exists
             os.makedirs(os.path.dirname(self._cache_file), exist_ok=True)
@@ -61,6 +76,14 @@ class InmetApiClient:
             with open(self._cache_file, "w") as f:
                 json.dump(self._geocode_cache, f, indent=2)
             _LOGGER.debug("Saved geocode cache to %s", self._cache_file)
+        except Exception as err:
+            _LOGGER.warning("Failed to save geocode cache: %s", err)
+
+    async def _save_cache(self) -> None:
+        """Save geocode cache to file (async)."""
+        try:
+            # Run blocking I/O in executor to avoid blocking event loop
+            await asyncio.to_thread(self._save_cache_sync)
         except Exception as err:
             _LOGGER.warning("Failed to save geocode cache: %s", err)
 
@@ -84,6 +107,9 @@ class InmetApiClient:
         Queries the Previsao_Portal API and caches the result for 2 days.
         Falls back to distance-based calculation if API fails.
         """
+        # Load cache if not already loaded
+        await self._load_cache()
+
         # Check cache first
         cache_key = self._get_cache_key(latitude, longitude)
         if cache_key in self._geocode_cache:
@@ -124,7 +150,7 @@ class InmetApiClient:
                                 "latitude": latitude,
                                 "longitude": longitude,
                             }
-                            self._save_cache()
+                            await self._save_cache()
 
                             _LOGGER.info(
                                 "Found geocode %s from API for coordinates (%.2f, %.2f)",
@@ -157,7 +183,7 @@ class InmetApiClient:
                 "longitude": longitude,
                 "source": "fallback",
             }
-            self._save_cache()
+            await self._save_cache()
 
         return geocode
 
