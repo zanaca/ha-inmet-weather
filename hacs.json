@@ -1,6 +1,8 @@
 {
-  "name": "INMET Weather",
+  "name": "INMET Weather (Brazilian Institute of Meteorology)",
   "content_in_root": false,
   "render_readme": true,
-  "domains": ["weather"]
+  "filename": "inmet_weather.zip",
+  "domains": ["weather"],
+  "country": ["BR"]
 }
