@@ -9,15 +9,17 @@ A Home Assistant custom integration that provides weather data from INMET (Insti
 Want to test the integration locally right now?
 
 ```bash
-# Run the automated test script
-./run_tests.sh
-
-# Or manually run tests
-pip install -r requirements-test.txt
-pytest -v
+# Test core API logic (no installation needed!)
+python test_api_direct.py
 ```
 
-See [LOCAL_TESTING.md](LOCAL_TESTING.md) for detailed local testing and installation instructions.
+**Having issues with pytest?** See [QUICK_START.md](QUICK_START.md) for solutions to common problems.
+
+For complete testing options and troubleshooting, see:
+
+- **[QUICK_START.md](QUICK_START.md)** - Quick testing guide & troubleshooting
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Complete testing documentation
+- **[LOCAL_TESTING.md](LOCAL_TESTING.md)** - Run in real Home Assistant
 
 ## Features
 

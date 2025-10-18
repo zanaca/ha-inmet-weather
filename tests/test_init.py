@@ -33,14 +33,15 @@ async def test_async_setup_entry(mock_config_entry):
     entry = MagicMock(spec=ConfigEntry)
     entry.data = mock_config_entry
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups", return_value=AsyncMock()
-    ) as mock_forward:
-        result = await async_setup_entry(hass, entry)
+    # Create an AsyncMock that returns None when awaited
+    mock_forward = AsyncMock(return_value=None)
+    hass.config_entries.async_forward_entry_setups = mock_forward
 
-        assert result is True
-        assert DOMAIN in hass.data
-        mock_forward.assert_called_once_with(entry, ["weather"])
+    result = await async_setup_entry(hass, entry)
+
+    assert result is True
+    assert DOMAIN in hass.data
+    mock_forward.assert_called_once_with(entry, ["weather"])
 
 
 @pytest.mark.asyncio
@@ -57,13 +58,13 @@ async def test_async_setup_entry_creates_domain_data():
         "geocode": "3304557",
     }
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups", return_value=AsyncMock()
-    ):
-        await async_setup_entry(hass, entry)
+    # Create an AsyncMock that returns None when awaited
+    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=None)
 
-        assert DOMAIN in hass.data
-        assert isinstance(hass.data[DOMAIN], dict)
+    await async_setup_entry(hass, entry)
+
+    assert DOMAIN in hass.data
+    assert isinstance(hass.data[DOMAIN], dict)
 
 
 @pytest.mark.asyncio
@@ -75,16 +76,15 @@ async def test_async_unload_entry_success():
     entry = MagicMock(spec=ConfigEntry)
     entry.entry_id = "test_entry_id"
 
-    with patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        return_value=AsyncMock(return_value=True),
-    ) as mock_unload:
-        result = await async_unload_entry(hass, entry)
+    # Create an AsyncMock that returns True when awaited
+    mock_unload = AsyncMock(return_value=True)
+    hass.config_entries.async_unload_platforms = mock_unload
 
-        assert result is True
-        assert "test_entry_id" not in hass.data[DOMAIN]
-        mock_unload.assert_called_once_with(entry, ["weather"])
+    result = await async_unload_entry(hass, entry)
+
+    assert result is True
+    assert "test_entry_id" not in hass.data[DOMAIN]
+    mock_unload.assert_called_once_with(entry, ["weather"])
 
 
 @pytest.mark.asyncio
@@ -96,16 +96,14 @@ async def test_async_unload_entry_failure():
     entry = MagicMock(spec=ConfigEntry)
     entry.entry_id = "test_entry_id"
 
-    with patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        return_value=AsyncMock(return_value=False),
-    ):
-        result = await async_unload_entry(hass, entry)
+    # Create an AsyncMock that returns False when awaited
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
 
-        assert result is False
-        # Data should still be present since unload failed
-        assert "test_entry_id" in hass.data[DOMAIN]
+    result = await async_unload_entry(hass, entry)
+
+    assert result is False
+    # Data should still be present since unload failed
+    assert "test_entry_id" in hass.data[DOMAIN]
 
 
 @pytest.mark.asyncio
@@ -117,15 +115,13 @@ async def test_async_unload_entry_missing_data():
     entry = MagicMock(spec=ConfigEntry)
     entry.entry_id = "missing_entry_id"
 
-    with patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        return_value=AsyncMock(return_value=True),
-    ):
-        result = await async_unload_entry(hass, entry)
+    # Create an AsyncMock that returns True when awaited
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
 
-        # Should still return True even if entry wasn't in data
-        assert result is True
+    result = await async_unload_entry(hass, entry)
+
+    # Should still return True even if entry wasn't in data
+    assert result is True
 
 
 @pytest.mark.asyncio
@@ -142,11 +138,12 @@ async def test_platforms_loaded():
         "geocode": "3304557",
     }
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups", return_value=AsyncMock()
-    ) as mock_forward:
-        await async_setup_entry(hass, entry)
+    # Create an AsyncMock that returns None when awaited
+    mock_forward = AsyncMock(return_value=None)
+    hass.config_entries.async_forward_entry_setups = mock_forward
 
-        # Verify weather platform was loaded
-        call_args = mock_forward.call_args[0]
-        assert "weather" in call_args[1]
+    await async_setup_entry(hass, entry)
+
+    # Verify weather platform was loaded
+    call_args = mock_forward.call_args[0]
+    assert "weather" in call_args[1]

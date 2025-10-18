@@ -324,50 +324,57 @@ def test_weather_entity_invalid_humidity():
 
 
 @pytest.mark.asyncio
-async def test_coordinator_update_success(mock_current_weather_response, mock_forecast_response):
+async def test_coordinator_update_success(mock_hass, mock_current_weather_response, mock_forecast_response):
     """Test coordinator data update success."""
-    mock_hass = MagicMock()
+    from unittest.mock import patch
+
     mock_client = AsyncMock()
     mock_client.get_current_weather = AsyncMock(return_value=mock_current_weather_response)
     mock_client.get_forecast = AsyncMock(return_value=mock_forecast_response)
 
-    coordinator = InmetWeatherCoordinator(mock_hass, mock_client, "3304557")
+    # Patch frame.report_usage to avoid "Frame helper not set up" error
+    with patch("homeassistant.helpers.frame.report_usage"):
+        coordinator = InmetWeatherCoordinator(mock_hass, mock_client, "3304557")
 
-    result = await coordinator._async_update_data()
+        result = await coordinator._async_update_data()
 
-    assert result is not None
-    assert "current" in result
-    assert "forecast" in result
-    assert result["current"] == mock_current_weather_response
-    assert result["forecast"] == mock_forecast_response
+        assert result is not None
+        assert "current" in result
+        assert "forecast" in result
+        assert result["current"] == mock_current_weather_response
+        assert result["forecast"] == mock_forecast_response
 
 
 @pytest.mark.asyncio
-async def test_coordinator_update_failure():
+async def test_coordinator_update_failure(mock_hass):
     """Test coordinator handles update failure."""
+    from unittest.mock import patch
     from homeassistant.helpers.update_coordinator import UpdateFailed
 
-    mock_hass = MagicMock()
     mock_client = AsyncMock()
     mock_client.get_current_weather = AsyncMock(return_value=None)
     mock_client.get_forecast = AsyncMock(return_value=None)
 
-    coordinator = InmetWeatherCoordinator(mock_hass, mock_client, "3304557")
+    # Patch frame.report_usage to avoid "Frame helper not set up" error
+    with patch("homeassistant.helpers.frame.report_usage"):
+        coordinator = InmetWeatherCoordinator(mock_hass, mock_client, "3304557")
 
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
+        with pytest.raises(UpdateFailed):
+            await coordinator._async_update_data()
 
 
 @pytest.mark.asyncio
-async def test_coordinator_update_exception():
+async def test_coordinator_update_exception(mock_hass):
     """Test coordinator handles exceptions during update."""
+    from unittest.mock import patch
     from homeassistant.helpers.update_coordinator import UpdateFailed
 
-    mock_hass = MagicMock()
     mock_client = AsyncMock()
     mock_client.get_current_weather = AsyncMock(side_effect=Exception("API Error"))
 
-    coordinator = InmetWeatherCoordinator(mock_hass, mock_client, "3304557")
+    # Patch frame.report_usage to avoid "Frame helper not set up" error
+    with patch("homeassistant.helpers.frame.report_usage"):
+        coordinator = InmetWeatherCoordinator(mock_hass, mock_client, "3304557")
 
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
+        with pytest.raises(UpdateFailed):
+            await coordinator._async_update_data()

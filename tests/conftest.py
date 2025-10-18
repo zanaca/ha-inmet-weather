@@ -11,6 +11,24 @@ CONF_NAME = "name"
 
 
 @pytest.fixture
+def mock_hass():
+    """Create a mock Home Assistant instance with frame helper support."""
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers import frame
+
+    # Create a real minimal HomeAssistant instance
+    hass = MagicMock(spec=HomeAssistant)
+    hass.data = {}
+    hass.loop = None
+
+    # Set up the frame helper to avoid "Frame helper not set up" error
+    # This is required for DataUpdateCoordinator initialization
+    frame._REPORTED_INTEGRATIONS = set()
+
+    return hass
+
+
+@pytest.fixture
 def mock_aiohttp_client():
     """Mock aiohttp client session."""
     with patch("aiohttp.ClientSession") as mock_session:

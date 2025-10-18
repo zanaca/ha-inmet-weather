@@ -44,14 +44,16 @@ async def test_get_geocode_from_coordinates_brasilia():
 
 @pytest.mark.asyncio
 async def test_get_geocode_from_coordinates_fallback():
-    """Test geocode detection falls back to Rio when far from known cities."""
+    """Test geocode detection finds nearest city even for distant coordinates."""
     session = MagicMock(spec=ClientSession)
     client = InmetApiClient(session)
 
-    # Test coordinates in the middle of nowhere (should default to Rio)
+    # Test coordinates in the middle of the ocean (0,0 - Gulf of Guinea)
+    # Algorithm should find Natal as it's the closest Brazilian city to the equator
     geocode = await client.get_geocode_from_coordinates(0, 0)
 
-    assert geocode == "3304557"
+    # Should return Natal (2408102) as it's closest to equator
+    assert geocode == "2408102"
 
 
 @pytest.mark.asyncio
