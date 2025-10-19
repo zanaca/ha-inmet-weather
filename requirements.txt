@@ -1,0 +1,13 @@
+# Runtime requirements for INMET Weather integration
+
+# HTTP client for async API calls
+aiohttp>=3.8.5
+
+# Async timeout handling
+async-timeout>=4.0.3
+
+# Home Assistant (for development/testing)
+homeassistant>=2024.1.0
+
+# Form validation (used in config_flow.py)
+voluptuous>=0.13.1

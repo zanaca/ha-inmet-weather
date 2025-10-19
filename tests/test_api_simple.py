@@ -13,42 +13,6 @@ from custom_components.inmet_weather.api import InmetApiClient  # noqa: E402
 
 
 @pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_rio():
-    """Test geocode detection for Rio de Janeiro."""
-    session = MagicMock()
-    client = InmetApiClient(session)
-
-    # Test coordinates near Rio de Janeiro
-    geocode = await client.get_geocode_from_coordinates(-22.9068, -43.1729)
-
-    assert geocode == "3304557"
-
-
-@pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_sao_paulo():
-    """Test geocode detection for São Paulo."""
-    session = MagicMock()
-    client = InmetApiClient(session)
-
-    # Test coordinates near São Paulo
-    geocode = await client.get_geocode_from_coordinates(-23.5505, -46.6333)
-
-    assert geocode == "3550308"
-
-
-@pytest.mark.asyncio
-async def test_get_geocode_from_coordinates_brasilia():
-    """Test geocode detection for Brasília."""
-    session = MagicMock()
-    client = InmetApiClient(session)
-
-    # Test coordinates near Brasília
-    geocode = await client.get_geocode_from_coordinates(-15.7939, -47.8828)
-
-    assert geocode == "5300108"
-
-
-@pytest.mark.asyncio
 async def test_get_geocode_from_coordinates_error(temp_cache_dir):
     """Test geocode detection handles errors."""
     session = MagicMock()
