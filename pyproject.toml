@@ -1,5 +1,29 @@
 [project]
+name = "inmet_weather"
+version = "1.1.1"
+description = "INMET Weather integration for Home Assistant"
 requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.8.5",
+    "async-timeout>=4.0.3",
+    "homeassistant>=2024.1.0",
+    "voluptuous>=0.13.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "pylint>=2.17.0",
+]
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-homeassistant-custom-component>=0.13.0",
+    "pytest-mock>=3.11.0",
+]
 
 [tool.black]
 target-version = ["py313"]

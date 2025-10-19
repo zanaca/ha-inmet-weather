@@ -11,3 +11,6 @@ homeassistant>=2024.1.0
 
 # Form validation (used in config_flow.py)
 voluptuous>=0.13.1
+
+# Code quality and linting
+ruff>=0.1.0
