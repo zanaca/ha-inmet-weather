@@ -33,6 +33,7 @@ def test_condition_map_exists():
 def test_condition_map_cloudy():
     """Test cloudy conditions mapping."""
     assert CONDITION_MAP.get("muitas nuvens") == "cloudy"
+    assert CONDITION_MAP.get("poucas nuvens") == "partlycloudy"
     assert CONDITION_MAP.get("nublado") == "cloudy"
     assert CONDITION_MAP.get("encoberto") == "cloudy"
 

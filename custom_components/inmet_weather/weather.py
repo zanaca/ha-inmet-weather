@@ -250,7 +250,7 @@ class InmetWeatherEntity(CoordinatorEntity[InmetWeatherCoordinator], WeatherEnti
             ATTR_FORECAST_TIME: forecast_time.isoformat(),
             ATTR_FORECAST_NATIVE_TEMP: data.get("temp_max"),
             ATTR_FORECAST_NATIVE_TEMP_LOW: data.get("temp_min"),
-            ATTR_FORECAST_WIND_BEARING: data.get("dir-vento"),
+            ATTR_FORECAST_WIND_BEARING: data.get("dir_vento"),
         }
 
         # Add condition if available
@@ -267,7 +267,10 @@ class InmetWeatherEntity(CoordinatorEntity[InmetWeatherCoordinator], WeatherEnti
         return forecast_item
 
     def _parse_forecast_data(
-        self, forecast_data: dict[str, Any], max_items: int, periods: list[str] | None = None
+        self,
+        forecast_data: dict[str, Any],
+        max_items: int,
+        periods: list[str] | None = None,
     ) -> list[Forecast]:
         """Parse forecast data and return list of forecast items.
 
@@ -307,7 +310,9 @@ class InmetWeatherEntity(CoordinatorEntity[InmetWeatherCoordinator], WeatherEnti
                             for period_key in periods:
                                 if period_key in date_data:
                                     item = self._generate_forecast_item(
-                                        date_obj, date_data[period_key], period=period_key
+                                        date_obj,
+                                        date_data[period_key],
+                                        period=period_key,
                                     )
                                     if item:
                                         forecasts.append(item)
