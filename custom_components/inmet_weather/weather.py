@@ -10,6 +10,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -95,9 +96,7 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
-    _attr_supported_features = (
-        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_TWICE_DAILY
-    )
+    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     def __init__(
         self,
@@ -230,6 +229,92 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
 
         return None
 
+    # @property
+    # def condition(self):
+    #     """Return current weather condition (mapped from INMET data)."""
+    #     # You can infer condition from humidity, rain, or radiation
+    #     chuva = float(self._data.get("CHUVA", 0))
+    #     rad = float(self._data.get("RAD_GLO", 0))
+    #     if chuva > 0:
+    #         return "rainy"
+    #     if rad < 0:
+    #         return "clear-night"
+    #     if rad < 50:
+    #         return "cloudy"
+    #     return "sunny"
+
+    @property
+    def native_apparent_temperature(self):
+        """Feels-like temperature."""
+        return self._safe_float(self._data.get("TEM_SEN"))
+
+    @property
+    def native_precipitation(self):
+        """Accumulated rainfall in mm."""
+        return self._safe_float(self._data.get("CHUVA"))
+
+    @property
+    def attribution(self):
+        """Return the attribution."""
+        return "Data provided by INMET (Instituto Nacional de Meteorologia)"
+
+    @property
+    def native_temperature_low(self):
+        """Return the min temperature (for the day)."""
+        return self._safe_float(self._data.get("TEM_MIN"))
+
+    @property
+    def native_temperature_high(self):
+        """Return the max temperature (for the day)."""
+        return self._safe_float(self._data.get("TEM_MAX"))
+
+    def _safe_float(self, val):
+        """Convert safely to float."""
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return None
+
+    def generate_item(
+        self, date_obj: datetime, data: dict, period: Any = None
+    ) -> Optional[Forecast]:
+        """Generate a forecast item from data."""
+        if not data:
+            return None
+
+        hour: int = 6
+        if period:
+            if period == "tarde":
+                hour = 12
+            else:
+                hour = 18
+
+        forecast_time = date_obj.replace(hour=hour, minute=0, second=0)
+
+        # Get condition
+        resumo = data.get("resumo", "").lower()
+        condition = None
+        for key, value in CONDITION_MAP.items():
+            if key in resumo:
+                condition = value
+                break
+
+        forecast_item: Forecast = {
+            ATTR_FORECAST_TIME: forecast_time.isoformat(),
+            ATTR_FORECAST_NATIVE_TEMP: data.get("temp_max"),
+            ATTR_FORECAST_NATIVE_TEMP_LOW: data.get("temp_min"),
+            ATTR_FORECAST_WIND_BEARING: data.get("dir-vento"),
+        }
+
+        if condition:
+            forecast_item[ATTR_FORECAST_CONDITION] = condition
+
+        # Add humidity if available
+        if "umidade_max" in data:
+            forecast_item[ATTR_FORECAST_HUMIDITY] = data["umidade_max"]
+
+        return forecast_item
+
     @property
     def forecast(self) -> Optional[List[Forecast]]:
         """Return the forecast."""
@@ -249,48 +334,18 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
                         continue
 
                     # Process each period
-                    for period_key in ["manha", "tarde", "noite"]:
-                        if period_key in date_data:
-                            period_data = date_data[period_key]
-
-                            # Determine the time for this period
-                            if period_key == "manha":
-                                hour = 6
-                            elif period_key == "tarde":
-                                hour = 12
-                            else:
-                                hour = 18
-
-                            forecast_time = date_obj.replace(
-                                hour=hour, minute=0, second=0
-                            )
-
-                            # Get condition
-                            resumo = period_data.get("resumo", "").lower()
-                            condition = None
-                            for key, value in CONDITION_MAP.items():
-                                if key in resumo:
-                                    condition = value
-                                    break
-
-                            forecast_item: Forecast = {
-                                ATTR_FORECAST_TIME: forecast_time.isoformat(),
-                                ATTR_FORECAST_NATIVE_TEMP: period_data.get("temp_max"),
-                                ATTR_FORECAST_NATIVE_TEMP_LOW: period_data.get(
-                                    "temp_min"
-                                ),
-                            }
-
-                            if condition:
-                                forecast_item[ATTR_FORECAST_CONDITION] = condition
-
-                            # Add humidity if available
-                            if "umidade_max" in period_data:
-                                forecast_item[ATTR_FORECAST_HUMIDITY] = period_data[
-                                    "umidade_max"
-                                ]
-
-                            forecasts.append(forecast_item)
+                    if "uf" in date_data:
+                        item = self.generate_item(date_obj, date_data)
+                        if item:
+                            forecasts.append(item)
+                    else:
+                        for period_key in ["manha", "tarde", "noite"]:
+                            if period_key in date_data:
+                                item = self.generate_item(
+                                    date_obj, date_data[period_key], period=period_key
+                                )
+                                if item:
+                                    forecasts.append(item)
 
             return forecasts[:15]  # Limit to 15 forecast items
 
@@ -315,47 +370,21 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
                     except ValueError:
                         continue
 
-                    # Process day (tarde) and night periods
-                    for period_key in ["tarde", "noite"]:
-                        if period_key in date_data:
-                            period_data = date_data[period_key]
+                    if "uf" in date_data:
+                        item = self.generate_item(date_obj, date_data)
+                        if item:
+                            forecasts.append(item)
+                        continue
 
-                            # Determine the time for this period
-                            if period_key == "tarde":
-                                hour = 12
-                            else:
-                                hour = 18
-
-                            forecast_time = date_obj.replace(
-                                hour=hour, minute=0, second=0
-                            )
-
-                            # Get condition
-                            resumo = period_data.get("resumo", "").lower()
-                            condition = None
-                            for key, value in CONDITION_MAP.items():
-                                if key in resumo:
-                                    condition = value
-                                    break
-
-                            forecast_item: Forecast = {
-                                ATTR_FORECAST_TIME: forecast_time.isoformat(),
-                                ATTR_FORECAST_NATIVE_TEMP: period_data.get("temp_max"),
-                                ATTR_FORECAST_NATIVE_TEMP_LOW: period_data.get(
-                                    "temp_min"
-                                ),
-                            }
-
-                            if condition:
-                                forecast_item[ATTR_FORECAST_CONDITION] = condition
-
-                            # Add humidity if available
-                            if "umidade_max" in period_data:
-                                forecast_item[ATTR_FORECAST_HUMIDITY] = period_data[
-                                    "umidade_max"
-                                ]
-
-                            forecasts.append(forecast_item)
+                    else:
+                        # Process day (manha), afternoon (tarde) and night (noite) periods
+                        for period_key in ["manha", "tarde", "noite"]:
+                            if period_key in date_data:
+                                item = self.generate_item(
+                                    date_obj, date_data[period_key], period=period_key
+                                )
+                                if item:
+                                    forecasts.append(item)
 
             return forecasts[:14]  # Limit to 14 items (7 days x 2)
 
@@ -380,37 +409,18 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
                     except ValueError:
                         continue
 
-                    # Get data from afternoon period as representative of the day
-                    period_data = date_data.get("tarde", {})
-                    if not period_data:
+                    if "uf" in date_data:
+                        # Single period data
+                        item = self.generate_item(date_obj, date_data)
+                        if item:
+                            forecasts.append(item)
                         continue
 
-                    forecast_time = date_obj.replace(hour=12, minute=0, second=0)
-
-                    # Get condition
-                    resumo = period_data.get("resumo", "").lower()
-                    condition = None
-                    for key, value in CONDITION_MAP.items():
-                        if key in resumo:
-                            condition = value
-                            break
-
-                    forecast_item: Forecast = {
-                        ATTR_FORECAST_TIME: forecast_time.isoformat(),
-                        ATTR_FORECAST_NATIVE_TEMP: period_data.get("temp_max"),
-                        ATTR_FORECAST_NATIVE_TEMP_LOW: period_data.get("temp_min"),
-                    }
-
-                    if condition:
-                        forecast_item[ATTR_FORECAST_CONDITION] = condition
-
-                    # Add humidity if available
-                    if "umidade_max" in period_data:
-                        forecast_item[ATTR_FORECAST_HUMIDITY] = period_data[
-                            "umidade_max"
-                        ]
-
-                    forecasts.append(forecast_item)
+                    else:
+                        # Get data from afternoon period as representative of the day
+                        item = self.generate_item(date_obj, date_data, "tarde")
+                        if item:
+                            forecasts.append(item)
 
             return forecasts[:7]  # Limit to 7 days
 
