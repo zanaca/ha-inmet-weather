@@ -1,8 +1,10 @@
 """Weather platform for INMET Weather integration."""
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -38,6 +40,13 @@ from .const import CONDITION_MAP, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+# Period time mappings for forecasts
+PERIOD_HOURS = {
+    "manha": 6,
+    "tarde": 12,
+    "noite": 18,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -59,7 +68,7 @@ async def async_setup_entry(
     async_add_entities([InmetWeatherEntity(coordinator, name, latitude, longitude)])
 
 
-class InmetWeatherCoordinator(DataUpdateCoordinator):
+class InmetWeatherCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """INMET Weather data coordinator."""
 
     def __init__(
@@ -75,7 +84,7 @@ class InmetWeatherCoordinator(DataUpdateCoordinator):
         self.client = client
         self.geocode = geocode
 
-    async def _async_update_data(self) -> Dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""
         try:
             current = await self.client.get_current_weather(self.geocode)
@@ -87,16 +96,17 @@ class InmetWeatherCoordinator(DataUpdateCoordinator):
             return {"current": current, "forecast": forecast}
 
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
-class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
+class InmetWeatherEntity(CoordinatorEntity[InmetWeatherCoordinator], WeatherEntity):
     """INMET Weather Entity."""
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
+    _attr_attribution = "Data provided by INMET (Instituto Nacional de Meteorologia)"
 
     def __init__(
         self,
@@ -112,193 +122,130 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
         self._latitude = latitude
         self._longitude = longitude
 
-    @property
-    def native_temperature(self) -> Optional[float]:
-        """Return the temperature."""
-        if self.coordinator.data and "current" in self.coordinator.data:
-            current = self.coordinator.data["current"]
-            if "dados" in current:
-                temp = current["dados"].get("TEM_INS")
-                if temp:
-                    try:
-                        return float(temp)
-                    except (ValueError, TypeError):
-                        return None
-        return None
+    def _get_current_data(self, key: str) -> float | None:
+        """Get current weather data value safely."""
+        if not self.coordinator.data or "current" not in self.coordinator.data:
+            return None
 
-    @property
-    def humidity(self) -> Optional[float]:
-        """Return the humidity."""
-        if self.coordinator.data and "current" in self.coordinator.data:
-            current = self.coordinator.data["current"]
-            if "dados" in current:
-                humidity = current["dados"].get("UMD_INS")
-                if humidity:
-                    try:
-                        return float(humidity)
-                    except (ValueError, TypeError):
-                        return None
-        return None
+        current = self.coordinator.data["current"]
+        if "dados" not in current:
+            return None
 
-    @property
-    def native_pressure(self) -> Optional[float]:
-        """Return the pressure."""
-        if self.coordinator.data and "current" in self.coordinator.data:
-            current = self.coordinator.data["current"]
-            if "dados" in current:
-                pressure = current["dados"].get("PRE_INS")
-                if pressure:
-                    try:
-                        return float(pressure)
-                    except (ValueError, TypeError):
-                        return None
-        return None
+        value = current["dados"].get(key)
+        return self._safe_float(value)
 
-    @property
-    def native_wind_speed(self) -> Optional[float]:
-        """Return the wind speed in m/s."""
-        if self.coordinator.data and "current" in self.coordinator.data:
-            current = self.coordinator.data["current"]
-            if "dados" in current:
-                wind_speed = current["dados"].get("VEN_VEL")
-                if wind_speed:
-                    try:
-                        return float(wind_speed)
-                    except (ValueError, TypeError):
-                        return None
-        return None
-
-    @property
-    def native_wind_gust_speed(self) -> Optional[float]:
-        """Return the wind gust speed in m/s."""
-        if self.coordinator.data and "current" in self.coordinator.data:
-            current = self.coordinator.data["current"]
-            if "dados" in current:
-                wind_gust = current["dados"].get("VEN_RAJ")
-                if wind_gust:
-                    try:
-                        return float(wind_gust)
-                    except (ValueError, TypeError):
-                        return None
-        return None
-
-    @property
-    def wind_bearing(self) -> Optional[float]:
-        """Return the wind bearing."""
-        if self.coordinator.data and "current" in self.coordinator.data:
-            current = self.coordinator.data["current"]
-            if "dados" in current:
-                wind_dir = current["dados"].get("VEN_DIR")
-                if wind_dir:
-                    try:
-                        return float(wind_dir)
-                    except (ValueError, TypeError):
-                        return None
-        return None
-
-    @property
-    def condition(self) -> Optional[str]:
-        """Return the current condition."""
-        if self.coordinator.data and "forecast" in self.coordinator.data:
-            forecast_data = self.coordinator.data["forecast"]
-
-            # Get today's forecast
-            today = datetime.now().strftime("%d/%m/%Y")
-
-            for city_data in forecast_data.values():
-                if today in city_data:
-                    today_data = city_data[today]
-
-                    # Get current hour
-                    current_hour = datetime.now().hour
-
-                    # Determine which period we're in
-                    if current_hour < 12:
-                        period_data = today_data.get("manha", {})
-                    elif current_hour < 18:
-                        period_data = today_data.get("tarde", {})
-                    else:
-                        period_data = today_data.get("noite", {})
-
-                    resumo = period_data.get("resumo", "").lower()
-
-                    # Map INMET condition to Home Assistant condition
-                    for key, value in CONDITION_MAP.items():
-                        if key in resumo:
-                            return value
-
-        return None
-
-    # @property
-    # def condition(self):
-    #     """Return current weather condition (mapped from INMET data)."""
-    #     # You can infer condition from humidity, rain, or radiation
-    #     chuva = float(self._data.get("CHUVA", 0))
-    #     rad = float(self._data.get("RAD_GLO", 0))
-    #     if chuva > 0:
-    #         return "rainy"
-    #     if rad < 0:
-    #         return "clear-night"
-    #     if rad < 50:
-    #         return "cloudy"
-    #     return "sunny"
-
-    @property
-    def native_apparent_temperature(self):
-        """Feels-like temperature."""
-        return self._safe_float(self._data.get("TEM_SEN"))
-
-    @property
-    def native_precipitation(self):
-        """Accumulated rainfall in mm."""
-        return self._safe_float(self._data.get("CHUVA"))
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return "Data provided by INMET (Instituto Nacional de Meteorologia)"
-
-    @property
-    def native_temperature_low(self):
-        """Return the min temperature (for the day)."""
-        return self._safe_float(self._data.get("TEM_MIN"))
-
-    @property
-    def native_temperature_high(self):
-        """Return the max temperature (for the day)."""
-        return self._safe_float(self._data.get("TEM_MAX"))
-
-    def _safe_float(self, val):
-        """Convert safely to float."""
+    @staticmethod
+    def _safe_float(val: Any) -> float | None:
+        """Convert value safely to float."""
+        if val is None:
+            return None
         try:
             return float(val)
         except (TypeError, ValueError):
             return None
 
-    def generate_item(
-        self, date_obj: datetime, data: dict, period: Any = None
-    ) -> Optional[Forecast]:
+    @property
+    def native_temperature(self) -> float | None:
+        """Return the temperature."""
+        return self._get_current_data("TEM_INS")
+
+    @property
+    def humidity(self) -> float | None:
+        """Return the humidity."""
+        return self._get_current_data("UMD_INS")
+
+    @property
+    def native_pressure(self) -> float | None:
+        """Return the pressure."""
+        return self._get_current_data("PRE_INS")
+
+    @property
+    def native_wind_speed(self) -> float | None:
+        """Return the wind speed in m/s."""
+        return self._get_current_data("VEN_VEL")
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in m/s."""
+        return self._get_current_data("VEN_RAJ")
+
+    @property
+    def wind_bearing(self) -> float | None:
+        """Return the wind bearing."""
+        return self._get_current_data("VEN_DIR")
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the feels-like temperature."""
+        return self._get_current_data("TEM_SEN")
+
+    @property
+    def native_precipitation(self) -> float | None:
+        """Return the accumulated rainfall in mm."""
+        return self._get_current_data("CHUVA")
+
+    @property
+    def native_temperature_low(self) -> float | None:
+        """Return the min temperature for the day."""
+        return self._get_current_data("TEM_MIN")
+
+    @property
+    def native_temperature_high(self) -> float | None:
+        """Return the max temperature for the day."""
+        return self._get_current_data("TEM_MAX")
+
+    def _get_current_period(self) -> str:
+        """Determine the current time period (manha, tarde, noite)."""
+        current_hour = datetime.now().hour
+        if current_hour < 12:
+            return "manha"
+        if current_hour < 18:
+            return "tarde"
+        return "noite"
+
+    def _map_condition(self, resumo: str) -> str | None:
+        """Map INMET condition to Home Assistant condition."""
+        resumo_lower = resumo.lower()
+        for key, value in CONDITION_MAP.items():
+            if key in resumo_lower:
+                return value
+        return None
+
+    @property
+    def condition(self) -> str | None:
+        """Return the current condition."""
+        if not self.coordinator.data or "forecast" not in self.coordinator.data:
+            return None
+
+        forecast_data = self.coordinator.data["forecast"]
+        today = datetime.now().strftime("%d/%m/%Y")
+
+        for city_data in forecast_data.values():
+            if today not in city_data:
+                continue
+
+            today_data = city_data[today]
+            period = self._get_current_period()
+            period_data = today_data.get(period, {})
+            resumo = period_data.get("resumo", "")
+
+            if resumo:
+                return self._map_condition(resumo)
+
+        return None
+
+    def _generate_forecast_item(
+        self, date_obj: datetime, data: dict[str, Any], period: str | None = None
+    ) -> Forecast | None:
         """Generate a forecast item from data."""
         if not data:
             return None
 
-        hour: int = 6
-        if period:
-            if period == "tarde":
-                hour = 12
-            else:
-                hour = 18
-
+        # Determine hour based on period
+        hour = PERIOD_HOURS.get(period, 6) if period else 6
         forecast_time = date_obj.replace(hour=hour, minute=0, second=0)
 
-        # Get condition
-        resumo = data.get("resumo", "").lower()
-        condition = None
-        for key, value in CONDITION_MAP.items():
-            if key in resumo:
-                condition = value
-                break
-
+        # Build forecast item
         forecast_item: Forecast = {
             ATTR_FORECAST_TIME: forecast_time.isoformat(),
             ATTR_FORECAST_NATIVE_TEMP: data.get("temp_max"),
@@ -306,8 +253,12 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
             ATTR_FORECAST_WIND_BEARING: data.get("dir-vento"),
         }
 
-        if condition:
-            forecast_item[ATTR_FORECAST_CONDITION] = condition
+        # Add condition if available
+        resumo = data.get("resumo", "")
+        if resumo:
+            condition = self._map_condition(resumo)
+            if condition:
+                forecast_item[ATTR_FORECAST_CONDITION] = condition
 
         # Add humidity if available
         if "umidade_max" in data:
@@ -315,115 +266,83 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
 
         return forecast_item
 
+    def _parse_forecast_data(
+        self, forecast_data: dict[str, Any], max_items: int, periods: list[str] | None = None
+    ) -> list[Forecast]:
+        """Parse forecast data and return list of forecast items.
+
+        Args:
+            forecast_data: Raw forecast data from API
+            max_items: Maximum number of forecast items to return
+            periods: List of periods to include (e.g., ["manha", "tarde", "noite"]).
+                    If None, uses "tarde" as default for daily forecast.
+        """
+        forecasts: list[Forecast] = []
+
+        try:
+            for city_data in forecast_data.values():
+                for date_str, date_data in city_data.items():
+                    # Parse date
+                    try:
+                        date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+                    except ValueError:
+                        continue
+
+                    # Check if this is single-period data (has "uf" field)
+                    if "uf" in date_data:
+                        item = self._generate_forecast_item(date_obj, date_data)
+                        if item:
+                            forecasts.append(item)
+                    else:
+                        # Multi-period data
+                        if periods is None:
+                            # Default to afternoon for daily forecast
+                            item = self._generate_forecast_item(
+                                date_obj, date_data.get("tarde", {}), "tarde"
+                            )
+                            if item:
+                                forecasts.append(item)
+                        else:
+                            # Process specified periods
+                            for period_key in periods:
+                                if period_key in date_data:
+                                    item = self._generate_forecast_item(
+                                        date_obj, date_data[period_key], period=period_key
+                                    )
+                                    if item:
+                                        forecasts.append(item)
+
+            return forecasts[:max_items]
+
+        except Exception as err:
+            _LOGGER.error("Error parsing forecast data: %s", err)
+            return []
+
     @property
-    def forecast(self) -> Optional[List[Forecast]]:
+    def forecast(self) -> list[Forecast] | None:
         """Return the forecast."""
         if not self.coordinator.data or "forecast" not in self.coordinator.data:
             return None
 
         forecast_data = self.coordinator.data["forecast"]
-        forecasts = []
+        return self._parse_forecast_data(
+            forecast_data, max_items=15, periods=["manha", "tarde", "noite"]
+        )
 
-        try:
-            for city_data in forecast_data.values():
-                for date_str, date_data in city_data.items():
-                    # Parse date
-                    try:
-                        date_obj = datetime.strptime(date_str, "%d/%m/%Y")
-                    except ValueError:
-                        continue
-
-                    # Process each period
-                    if "uf" in date_data:
-                        item = self.generate_item(date_obj, date_data)
-                        if item:
-                            forecasts.append(item)
-                    else:
-                        for period_key in ["manha", "tarde", "noite"]:
-                            if period_key in date_data:
-                                item = self.generate_item(
-                                    date_obj, date_data[period_key], period=period_key
-                                )
-                                if item:
-                                    forecasts.append(item)
-
-            return forecasts[:15]  # Limit to 15 forecast items
-
-        except Exception as err:
-            _LOGGER.error("Error parsing forecast data: %s", err)
-            return None
-
-    async def async_forecast_twice_daily(self) -> Optional[List[Forecast]]:
+    async def async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast."""
         if not self.coordinator.data or "forecast" not in self.coordinator.data:
             return None
 
         forecast_data = self.coordinator.data["forecast"]
-        forecasts = []
+        return self._parse_forecast_data(
+            forecast_data, max_items=14, periods=["manha", "tarde", "noite"]
+        )
 
-        try:
-            for city_data in forecast_data.values():
-                for date_str, date_data in city_data.items():
-                    # Parse date
-                    try:
-                        date_obj = datetime.strptime(date_str, "%d/%m/%Y")
-                    except ValueError:
-                        continue
-
-                    if "uf" in date_data:
-                        item = self.generate_item(date_obj, date_data)
-                        if item:
-                            forecasts.append(item)
-                        continue
-
-                    else:
-                        # Process day (manha), afternoon (tarde) and night (noite) periods
-                        for period_key in ["manha", "tarde", "noite"]:
-                            if period_key in date_data:
-                                item = self.generate_item(
-                                    date_obj, date_data[period_key], period=period_key
-                                )
-                                if item:
-                                    forecasts.append(item)
-
-            return forecasts[:14]  # Limit to 14 items (7 days x 2)
-
-        except Exception as err:
-            _LOGGER.error("Error parsing twice daily forecast data: %s", err)
-            return None
-
-    async def async_forecast_daily(self) -> Optional[List[Forecast]]:
+    async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
         if not self.coordinator.data or "forecast" not in self.coordinator.data:
             return None
 
         forecast_data = self.coordinator.data["forecast"]
-        forecasts = []
-
-        try:
-            for city_data in forecast_data.values():
-                for date_str, date_data in city_data.items():
-                    # Parse date
-                    try:
-                        date_obj = datetime.strptime(date_str, "%d/%m/%Y")
-                    except ValueError:
-                        continue
-
-                    if "uf" in date_data:
-                        # Single period data
-                        item = self.generate_item(date_obj, date_data)
-                        if item:
-                            forecasts.append(item)
-                        continue
-
-                    else:
-                        # Get data from afternoon period as representative of the day
-                        item = self.generate_item(date_obj, date_data, "tarde")
-                        if item:
-                            forecasts.append(item)
-
-            return forecasts[:7]  # Limit to 7 days
-
-        except Exception as err:
-            _LOGGER.error("Error parsing daily forecast data: %s", err)
-            return None
+        return self._parse_forecast_data(forecast_data, max_items=7, periods=None)
