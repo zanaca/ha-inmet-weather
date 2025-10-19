@@ -265,7 +265,7 @@ class InmetWeatherEntity(CoordinatorEntity[InmetWeatherCoordinator], WeatherEnti
         # Add condition if available
         resumo = data.get("resumo", "")
         if resumo:
-            condition = self._map_condition(resumo)
+            condition = self._map_condition(resumo.lower())
             if condition:
                 if condition == CONDITION_SUNNY and period == "noite":
                     condition = CONDITION_CLEAR_NIGHT
