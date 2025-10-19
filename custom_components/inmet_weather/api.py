@@ -13,7 +13,7 @@ from typing import Any, Dict, Optional
 import aiohttp
 import async_timeout
 
-from .const import GEOCODE_CACHE_EXPIRY, GEOCODE_CACHE_FILE
+from .const import GEOCODE_CACHE_FILE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,14 +90,6 @@ class InmetApiClient:
         """Generate cache key from coordinates (rounded to 2 decimal places)."""
         return f"{round(latitude, 2)},{round(longitude, 2)}"
 
-    def _is_cache_valid(self, cache_entry: Dict[str, Any]) -> bool:
-        """Check if cache entry is still valid."""
-        if "timestamp" not in cache_entry:
-            return False
-
-        age = time.time() - cache_entry["timestamp"]
-        return age < GEOCODE_CACHE_EXPIRY
-
     async def get_geocode_from_coordinates(
         self, latitude: float, longitude: float
     ) -> Optional[str]:
@@ -113,20 +105,13 @@ class InmetApiClient:
         cache_key = self._get_cache_key(latitude, longitude)
         if cache_key in self._geocode_cache:
             cache_entry = self._geocode_cache[cache_key]
-            if self._is_cache_valid(cache_entry):
-                _LOGGER.debug(
-                    "Using cached geocode %s for coordinates (%.2f, %.2f)",
-                    cache_entry["geocode"],
-                    latitude,
-                    longitude,
-                )
-                return cache_entry["geocode"]
-            else:
-                _LOGGER.debug(
-                    "Cache entry expired for coordinates (%.2f, %.2f)",
-                    latitude,
-                    longitude,
-                )
+            _LOGGER.debug(
+                "Using cached geocode %s for coordinates (%.2f, %.2f)",
+                cache_entry["geocode"],
+                latitude,
+                longitude,
+            )
+            return cache_entry["geocode"]
 
         # Try to get geocode from live API
         try:

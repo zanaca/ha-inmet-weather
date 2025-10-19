@@ -12,6 +12,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -94,6 +95,9 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_TWICE_DAILY
+    )
 
     def __init__(
         self,
@@ -292,4 +296,124 @@ class InmetWeatherEntity(CoordinatorEntity, WeatherEntity):
 
         except Exception as err:
             _LOGGER.error("Error parsing forecast data: %s", err)
+            return None
+
+    async def async_forecast_twice_daily(self) -> Optional[List[Forecast]]:
+        """Return the twice daily forecast."""
+        if not self.coordinator.data or "forecast" not in self.coordinator.data:
+            return None
+
+        forecast_data = self.coordinator.data["forecast"]
+        forecasts = []
+
+        try:
+            for city_data in forecast_data.values():
+                for date_str, date_data in city_data.items():
+                    # Parse date
+                    try:
+                        date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+                    except ValueError:
+                        continue
+
+                    # Process day (tarde) and night periods
+                    for period_key in ["tarde", "noite"]:
+                        if period_key in date_data:
+                            period_data = date_data[period_key]
+
+                            # Determine the time for this period
+                            if period_key == "tarde":
+                                hour = 12
+                            else:
+                                hour = 18
+
+                            forecast_time = date_obj.replace(
+                                hour=hour, minute=0, second=0
+                            )
+
+                            # Get condition
+                            resumo = period_data.get("resumo", "").lower()
+                            condition = None
+                            for key, value in CONDITION_MAP.items():
+                                if key in resumo:
+                                    condition = value
+                                    break
+
+                            forecast_item: Forecast = {
+                                ATTR_FORECAST_TIME: forecast_time.isoformat(),
+                                ATTR_FORECAST_NATIVE_TEMP: period_data.get("temp_max"),
+                                ATTR_FORECAST_NATIVE_TEMP_LOW: period_data.get(
+                                    "temp_min"
+                                ),
+                            }
+
+                            if condition:
+                                forecast_item[ATTR_FORECAST_CONDITION] = condition
+
+                            # Add humidity if available
+                            if "umidade_max" in period_data:
+                                forecast_item[ATTR_FORECAST_HUMIDITY] = period_data[
+                                    "umidade_max"
+                                ]
+
+                            forecasts.append(forecast_item)
+
+            return forecasts[:14]  # Limit to 14 items (7 days x 2)
+
+        except Exception as err:
+            _LOGGER.error("Error parsing twice daily forecast data: %s", err)
+            return None
+
+    async def async_forecast_daily(self) -> Optional[List[Forecast]]:
+        """Return the daily forecast."""
+        if not self.coordinator.data or "forecast" not in self.coordinator.data:
+            return None
+
+        forecast_data = self.coordinator.data["forecast"]
+        forecasts = []
+
+        try:
+            for city_data in forecast_data.values():
+                for date_str, date_data in city_data.items():
+                    # Parse date
+                    try:
+                        date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+                    except ValueError:
+                        continue
+
+                    # Get data from afternoon period as representative of the day
+                    period_data = date_data.get("tarde", {})
+                    if not period_data:
+                        continue
+
+                    forecast_time = date_obj.replace(hour=12, minute=0, second=0)
+
+                    # Get condition
+                    resumo = period_data.get("resumo", "").lower()
+                    condition = None
+                    for key, value in CONDITION_MAP.items():
+                        if key in resumo:
+                            condition = value
+                            break
+
+                    forecast_item: Forecast = {
+                        ATTR_FORECAST_TIME: forecast_time.isoformat(),
+                        ATTR_FORECAST_NATIVE_TEMP: period_data.get("temp_max"),
+                        ATTR_FORECAST_NATIVE_TEMP_LOW: period_data.get("temp_min"),
+                    }
+
+                    if condition:
+                        forecast_item[ATTR_FORECAST_CONDITION] = condition
+
+                    # Add humidity if available
+                    if "umidade_max" in period_data:
+                        forecast_item[ATTR_FORECAST_HUMIDITY] = period_data[
+                            "umidade_max"
+                        ]
+
+                    forecasts.append(forecast_item)
+
+            return forecasts[:7]  # Limit to 7 days
+
+        except Exception as err:
+            _LOGGER.error("Error parsing daily forecast data: %s", err)
             return None

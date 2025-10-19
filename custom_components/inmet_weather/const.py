@@ -8,7 +8,6 @@ UPDATE_INTERVAL = 1800
 
 # Geocode cache settings
 GEOCODE_CACHE_FILE = ".inmet_geocode_cache.json"
-GEOCODE_CACHE_EXPIRY = 172800  # 2 days in seconds
 
 # Condition mapping from INMET to Home Assistant
 CONDITION_MAP = {
