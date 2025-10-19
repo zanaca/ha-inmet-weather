@@ -36,7 +36,13 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .api import InmetApiClient
-from .const import CONDITION_MAP, DOMAIN, UPDATE_INTERVAL
+from .const import (
+    CONDITION_MAP,
+    DOMAIN,
+    UPDATE_INTERVAL,
+    CONDITION_SUNNY,
+    CONDITION_CLEAR_NIGHT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,9 +209,8 @@ class InmetWeatherEntity(CoordinatorEntity[InmetWeatherCoordinator], WeatherEnti
             return "tarde"
         return "noite"
 
-    def _map_condition(self, resumo: str) -> str | None:
+    def _map_condition(self, resumo_lower: str) -> str | None:
         """Map INMET condition to Home Assistant condition."""
-        resumo_lower = resumo.lower()
         for key, value in CONDITION_MAP.items():
             if key in resumo_lower:
                 return value
@@ -230,7 +235,11 @@ class InmetWeatherEntity(CoordinatorEntity[InmetWeatherCoordinator], WeatherEnti
             resumo = period_data.get("resumo", "")
 
             if resumo:
-                return self._map_condition(resumo)
+                resumo_lower: str = resumo.lower()
+                condition: str | None = self._map_condition(resumo_lower)
+                if condition == CONDITION_SUNNY and period == "noite":
+                    condition = CONDITION_CLEAR_NIGHT
+                return condition
 
         return None
 
@@ -256,8 +265,10 @@ class InmetWeatherEntity(CoordinatorEntity[InmetWeatherCoordinator], WeatherEnti
         # Add condition if available
         resumo = data.get("resumo", "")
         if resumo:
-            condition = self._map_condition(resumo)
+            condition = self._map_condition(resumo.lower())
             if condition:
+                if condition == CONDITION_SUNNY and period == "noite":
+                    condition = CONDITION_CLEAR_NIGHT
                 forecast_item[ATTR_FORECAST_CONDITION] = condition
 
         # Add humidity if available
