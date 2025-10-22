@@ -2,7 +2,7 @@
   "domain": "inmet_weather",
   "name": "INMET Weather",
   "description": "Integration to get weather data from INMET (Instituto Nacional de Meteorologia) for Home Assistant.",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "documentation": "https://github.com/zanaca/ha-inmet-weather",
   "issue_tracker": "https://github.com/zanaca/ha-inmet-weather/issues",
   "domains": ["inmet_weather"],
