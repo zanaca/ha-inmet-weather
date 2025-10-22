@@ -41,6 +41,8 @@ class InmetApiClient:
         self._geocode_cache: Dict[str, Dict[str, Any]] = {}
         # Cache will be loaded on first use to avoid blocking I/O in __init__
         self._cache_loaded = False
+        # Cache for nearest station data (2 hours expiration)
+        self._station_cache: Dict[str, Dict[str, Any]] = {}
 
     def _load_cache_sync(self) -> None:
         """Load geocode cache from file (synchronous helper)."""
@@ -89,6 +91,13 @@ class InmetApiClient:
     def _get_cache_key(self, latitude: float, longitude: float) -> str:
         """Generate cache key from coordinates (rounded to 2 decimal places)."""
         return f"{round(latitude, 2)},{round(longitude, 2)}"
+
+    def _is_cache_valid(self, cache_entry: Dict[str, Any], max_age_seconds: int) -> bool:
+        """Check if a cache entry is still valid based on timestamp."""
+        if "timestamp" not in cache_entry:
+            return False
+        age = time.time() - cache_entry["timestamp"]
+        return age < max_age_seconds
 
     async def get_geocode_from_coordinates(
         self, latitude: float, longitude: float
@@ -205,7 +214,28 @@ class InmetApiClient:
     async def get_nearest_station(
         self, latitude: float, longitude: float
     ) -> Optional[Dict[str, Any]]:
-        """Get nearest weather station based on coordinates."""
+        """Get nearest weather station based on coordinates.
+
+        Results are cached for 2 hours to reduce API calls.
+        """
+        # Check cache first (2 hours = 7200 seconds)
+        cache_key = self._get_cache_key(latitude, longitude)
+        if cache_key in self._station_cache:
+            cache_entry = self._station_cache[cache_key]
+            if self._is_cache_valid(cache_entry, 7200):
+                _LOGGER.debug(
+                    "Using cached station data for coordinates (%.2f, %.2f)",
+                    latitude,
+                    longitude,
+                )
+                return cache_entry["data"]
+            else:
+                _LOGGER.debug(
+                    "Cache expired for station data at (%.2f, %.2f)",
+                    latitude,
+                    longitude,
+                )
+
         # First, we need to find the geocode
         # Since we don't have a direct endpoint, we'll use a heuristic approach
         # In a real implementation, you would cache a list of known geocodes and coordinates
@@ -227,7 +257,22 @@ class InmetApiClient:
                         )
                         return None
 
-                    return await response.json()
+                    station_data = await response.json()
+
+                    # Cache the result with timestamp
+                    self._station_cache[cache_key] = {
+                        "data": station_data,
+                        "timestamp": time.time(),
+                        "latitude": latitude,
+                        "longitude": longitude,
+                    }
+                    _LOGGER.debug(
+                        "Cached station data for coordinates (%.2f, %.2f)",
+                        latitude,
+                        longitude,
+                    )
+
+                    return station_data
 
         except Exception as err:
             _LOGGER.error("Error getting nearest station: %s", err)
