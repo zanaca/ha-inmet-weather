@@ -19,6 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 
 API_BASE_URL = "https://apiprevmet3.inmet.gov.br"
 TIMEOUT = 30
+LOG_MESSAGE_USING_LAST_SUCCESSFUL_STATION = (
+    "Using last successful station data for coordinates (%.2f, %.2f) due to exception"
+)
 
 
 class InmetApiClient:
@@ -304,7 +307,7 @@ class InmetApiClient:
             # Return last successful result if available
             if cache_key in self._last_successful_station:
                 _LOGGER.warning(
-                    "Using last successful station data for coordinates (%.2f, %.2f) due to exception",
+                    LOG_MESSAGE_USING_LAST_SUCCESSFUL_STATION,
                     latitude,
                     longitude,
                 )
