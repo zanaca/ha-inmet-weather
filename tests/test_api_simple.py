@@ -226,7 +226,6 @@ async def test_get_nearest_station_success(temp_cache_dir):
 @pytest.mark.asyncio
 async def test_get_nearest_station_cache_hit(temp_cache_dir):
     """Test that cached station data is returned on second call."""
-    import time
 
     session = MagicMock()
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
