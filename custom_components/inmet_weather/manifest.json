@@ -1,13 +1,10 @@
 {
   "domain": "inmet_weather",
   "name": "INMET Weather",
-  "description": "Integration to get weather data from INMET (Instituto Nacional de Meteorologia) for Home Assistant.",
-  "version": "1.2.0",
-  "documentation": "https://github.com/zanaca/ha-inmet-weather",
-  "issue_tracker": "https://github.com/zanaca/ha-inmet-weather/issues",
-  "domains": ["inmet_weather"],
   "codeowners": ["@zanaca"],
   "config_flow": true,
-  "content_in_root": false,
-  "iot_class": "cloud_polling"
+  "documentation": "https://github.com/zanaca/ha-inmet-weather",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/zanaca/ha-inmet-weather/issues",
+  "version": "1.2.0"
 }
