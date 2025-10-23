@@ -195,9 +195,10 @@ async def test_get_nearest_station_success(temp_cache_dir):
         }
     )
 
-    with patch.object(session, "post") as mock_post, patch.object(
-        session, "get"
-    ) as mock_get:
+    with (
+        patch.object(session, "post") as mock_post,
+        patch.object(session, "get") as mock_get,
+    ):
         mock_post.return_value.__aenter__.return_value = mock_geocode_response
         mock_get.return_value.__aenter__.return_value = mock_station_response
 
@@ -239,9 +240,10 @@ async def test_get_nearest_station_cache_hit(temp_cache_dir):
     }
     mock_station_response.json = AsyncMock(return_value=station_data)
 
-    with patch.object(session, "post") as mock_post, patch.object(
-        session, "get"
-    ) as mock_get:
+    with (
+        patch.object(session, "post") as mock_post,
+        patch.object(session, "get") as mock_get,
+    ):
         mock_post.return_value.__aenter__.return_value = mock_geocode_response
         mock_get.return_value.__aenter__.return_value = mock_station_response
 
@@ -290,9 +292,10 @@ async def test_get_nearest_station_cache_expiration(temp_cache_dir):
     }
     mock_station_response.json = AsyncMock(return_value=station_data)
 
-    with patch.object(session, "post") as mock_post, patch.object(
-        session, "get"
-    ) as mock_get:
+    with (
+        patch.object(session, "post") as mock_post,
+        patch.object(session, "get") as mock_get,
+    ):
         mock_post.return_value.__aenter__.return_value = mock_geocode_response
         mock_get.return_value.__aenter__.return_value = mock_station_response
 
@@ -353,9 +356,10 @@ async def test_get_nearest_station_error(temp_cache_dir):
     mock_station_response = AsyncMock()
     mock_station_response.status = 500
 
-    with patch.object(session, "post") as mock_post, patch.object(
-        session, "get"
-    ) as mock_get:
+    with (
+        patch.object(session, "post") as mock_post,
+        patch.object(session, "get") as mock_get,
+    ):
         mock_post.return_value.__aenter__.return_value = mock_geocode_response
         mock_get.return_value.__aenter__.return_value = mock_station_response
 
@@ -470,9 +474,10 @@ async def test_get_nearest_station_fallback_on_error_after_cache_expiry(temp_cac
     mock_error_station = AsyncMock()
     mock_error_station.status = 500
 
-    with patch.object(session, "post") as mock_post, patch.object(
-        session, "get"
-    ) as mock_get:
+    with (
+        patch.object(session, "post") as mock_post,
+        patch.object(session, "get") as mock_get,
+    ):
         mock_post.return_value.__aenter__.return_value = mock_geocode_response
         mock_get.return_value.__aenter__.side_effect = [
             mock_success_station,

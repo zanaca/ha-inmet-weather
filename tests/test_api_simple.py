@@ -454,9 +454,7 @@ async def test_get_forecast_fallback_on_error():
     mock_success_response.status = 200
     success_data = {
         "3304557": {
-            "17/10/2025": {
-                "manha": {"resumo": "Muitas nuvens", "temp_max": 32}
-            }
+            "17/10/2025": {"manha": {"resumo": "Muitas nuvens", "temp_max": 32}}
         }
     }
     mock_success_response.json = AsyncMock(return_value=success_data)

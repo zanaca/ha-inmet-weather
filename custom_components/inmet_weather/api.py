@@ -96,7 +96,9 @@ class InmetApiClient:
         """Generate cache key from coordinates (rounded to 2 decimal places)."""
         return f"{round(latitude, 2)},{round(longitude, 2)}"
 
-    def _is_cache_valid(self, cache_entry: Dict[str, Any], max_age_seconds: int) -> bool:
+    def _is_cache_valid(
+        self, cache_entry: Dict[str, Any], max_age_seconds: int
+    ) -> bool:
         """Check if a cache entry is still valid based on timestamp."""
         if "timestamp" not in cache_entry:
             return False
