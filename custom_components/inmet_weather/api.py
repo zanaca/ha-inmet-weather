@@ -43,6 +43,10 @@ class InmetApiClient:
         self._cache_loaded = False
         # Cache for nearest station data (2 hours expiration)
         self._station_cache: Dict[str, Dict[str, Any]] = {}
+        # Fallback cache for last successful API responses (no expiration)
+        self._last_successful_current_weather: Dict[str, Any] = {}
+        self._last_successful_forecast: Dict[str, Any] = {}
+        self._last_successful_station: Dict[str, Any] = {}
 
     def _load_cache_sync(self) -> None:
         """Load geocode cache from file (synchronous helper)."""
@@ -217,6 +221,7 @@ class InmetApiClient:
         """Get nearest weather station based on coordinates.
 
         Results are cached for 2 hours to reduce API calls.
+        Returns last successful result if current request fails.
         """
         # Check cache first (2 hours = 7200 seconds)
         cache_key = self._get_cache_key(latitude, longitude)
@@ -245,6 +250,14 @@ class InmetApiClient:
         geocode = await self.get_geocode_from_coordinates(latitude, longitude)
 
         if not geocode:
+            # Return last successful result if available
+            if cache_key in self._last_successful_station:
+                _LOGGER.warning(
+                    "Using last successful station data for coordinates (%.2f, %.2f) - no geocode",
+                    latitude,
+                    longitude,
+                )
+                return self._last_successful_station[cache_key]
             return None
 
         try:
@@ -255,6 +268,14 @@ class InmetApiClient:
                         _LOGGER.error(
                             "Error fetching station data: %s", response.status
                         )
+                        # Return last successful result if available
+                        if cache_key in self._last_successful_station:
+                            _LOGGER.warning(
+                                "Using last successful station data for coordinates (%.2f, %.2f)",
+                                latitude,
+                                longitude,
+                            )
+                            return self._last_successful_station[cache_key]
                         return None
 
                     station_data = await response.json()
@@ -266,6 +287,8 @@ class InmetApiClient:
                         "latitude": latitude,
                         "longitude": longitude,
                     }
+                    # Store successful result as fallback
+                    self._last_successful_station[cache_key] = station_data
                     _LOGGER.debug(
                         "Cached station data for coordinates (%.2f, %.2f)",
                         latitude,
@@ -276,10 +299,21 @@ class InmetApiClient:
 
         except Exception as err:
             _LOGGER.error("Error getting nearest station: %s", err)
+            # Return last successful result if available
+            if cache_key in self._last_successful_station:
+                _LOGGER.warning(
+                    "Using last successful station data for coordinates (%.2f, %.2f) due to exception",
+                    latitude,
+                    longitude,
+                )
+                return self._last_successful_station[cache_key]
             return None
 
     async def get_current_weather(self, geocode: str) -> Optional[Dict[str, Any]]:
-        """Get current weather data for a geocode."""
+        """Get current weather data for a geocode.
+
+        Returns last successful result if current request fails.
+        """
         try:
             async with async_timeout.timeout(TIMEOUT):
                 url = f"{API_BASE_URL}/estacao/proxima/{geocode}"
@@ -288,30 +322,64 @@ class InmetApiClient:
                         _LOGGER.error(
                             "Error fetching current weather: %s", response.status
                         )
+                        # Return last successful result if available
+                        if geocode in self._last_successful_current_weather:
+                            _LOGGER.warning(
+                                "Using last successful current weather data for %s",
+                                geocode,
+                            )
+                            return self._last_successful_current_weather[geocode]
                         return None
 
                     data = await response.json()
+                    # Store successful result as fallback
+                    self._last_successful_current_weather[geocode] = data
                     return data
 
         except Exception as err:
             _LOGGER.error("Error getting current weather: %s", err)
+            # Return last successful result if available
+            if geocode in self._last_successful_current_weather:
+                _LOGGER.warning(
+                    "Using last successful current weather data for %s due to exception",
+                    geocode,
+                )
+                return self._last_successful_current_weather[geocode]
             return None
 
     async def get_forecast(self, geocode: str) -> Optional[Dict[str, Any]]:
-        """Get weather forecast for a geocode."""
+        """Get weather forecast for a geocode.
+
+        Returns last successful result if current request fails.
+        """
         try:
             async with async_timeout.timeout(TIMEOUT):
                 url = f"{API_BASE_URL}/previsao/{geocode}"
                 async with self._session.get(url) as response:
                     if response.status != 200:
                         _LOGGER.error("Error fetching forecast: %s", response.status)
+                        # Return last successful result if available
+                        if geocode in self._last_successful_forecast:
+                            _LOGGER.warning(
+                                "Using last successful forecast data for %s", geocode
+                            )
+                            return self._last_successful_forecast[geocode]
                         return None
 
                     data = await response.json()
+                    # Store successful result as fallback
+                    self._last_successful_forecast[geocode] = data
                     return data
 
         except Exception as err:
             _LOGGER.error("Error getting forecast: %s", err)
+            # Return last successful result if available
+            if geocode in self._last_successful_forecast:
+                _LOGGER.warning(
+                    "Using last successful forecast data for %s due to exception",
+                    geocode,
+                )
+                return self._last_successful_forecast[geocode]
             return None
 
     @staticmethod

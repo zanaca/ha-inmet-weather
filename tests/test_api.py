@@ -362,3 +362,133 @@ async def test_get_nearest_station_error(temp_cache_dir):
         result = await client.get_nearest_station(-22.9068, -43.1729)
 
         assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_current_weather_fallback_on_error():
+    """Test that current weather returns last successful result on error."""
+    session = MagicMock(spec=ClientSession)
+    client = InmetApiClient(session)
+
+    # First successful response
+    mock_success_response = AsyncMock()
+    mock_success_response.status = 200
+    success_data = {"dados": {"TEM_INS": "29", "UMD_INS": "61"}}
+    mock_success_response.json = AsyncMock(return_value=success_data)
+
+    # Second failed response
+    mock_error_response = AsyncMock()
+    mock_error_response.status = 500
+
+    with patch.object(session, "get") as mock_get:
+        mock_get.return_value.__aenter__.side_effect = [
+            mock_success_response,
+            mock_error_response,
+        ]
+
+        # First call should succeed
+        result1 = await client.get_current_weather("3304557")
+        assert result1 is not None
+        assert result1 == success_data
+
+        # Second call should return cached successful result despite error
+        result2 = await client.get_current_weather("3304557")
+        assert result2 is not None
+        assert result2 == success_data
+
+
+@pytest.mark.asyncio
+async def test_get_forecast_fallback_on_error():
+    """Test that forecast returns last successful result on error."""
+    session = MagicMock(spec=ClientSession)
+    client = InmetApiClient(session)
+
+    # First successful response
+    mock_success_response = AsyncMock()
+    mock_success_response.status = 200
+    success_data = {
+        "3304557": {
+            "17/10/2025": {"manha": {"resumo": "Muitas nuvens", "temp_max": 32}}
+        }
+    }
+    mock_success_response.json = AsyncMock(return_value=success_data)
+
+    # Second failed response
+    mock_error_response = AsyncMock()
+    mock_error_response.status = 500
+
+    with patch.object(session, "get") as mock_get:
+        mock_get.return_value.__aenter__.side_effect = [
+            mock_success_response,
+            mock_error_response,
+        ]
+
+        # First call should succeed
+        result1 = await client.get_forecast("3304557")
+        assert result1 is not None
+        assert result1 == success_data
+
+        # Second call should return cached successful result despite error
+        result2 = await client.get_forecast("3304557")
+        assert result2 is not None
+        assert result2 == success_data
+
+
+@pytest.mark.asyncio
+async def test_get_nearest_station_fallback_on_error_after_cache_expiry(temp_cache_dir):
+    """Test that nearest station returns last successful result on error after cache expires."""
+    import time
+
+    session = MagicMock(spec=ClientSession)
+    client = InmetApiClient(session, cache_dir=temp_cache_dir)
+
+    # Mock geocode response
+    mock_geocode_response = AsyncMock()
+    mock_geocode_response.status = 200
+    mock_geocode_response.json = AsyncMock(
+        return_value={
+            "3304557": {
+                "centroide": {"lat": -22.9068, "lon": -43.1729},
+                "nome": "Rio de Janeiro",
+            }
+        }
+    )
+
+    # First successful station response
+    mock_success_station = AsyncMock()
+    mock_success_station.status = 200
+    success_data = {
+        "estacao": {
+            "CODIGO": "A636",
+            "NOME": "RIO DE JANEIRO - JACAREPAGUÁ",
+            "GEOCODE": "3304557",
+        }
+    }
+    mock_success_station.json = AsyncMock(return_value=success_data)
+
+    # Second failed station response
+    mock_error_station = AsyncMock()
+    mock_error_station.status = 500
+
+    with patch.object(session, "post") as mock_post, patch.object(
+        session, "get"
+    ) as mock_get:
+        mock_post.return_value.__aenter__.return_value = mock_geocode_response
+        mock_get.return_value.__aenter__.side_effect = [
+            mock_success_station,
+            mock_error_station,
+        ]
+
+        # First call should succeed
+        result1 = await client.get_nearest_station(-22.9068, -43.1729)
+        assert result1 is not None
+        assert result1 == success_data
+
+        # Expire the cache to force a new API call
+        cache_key = client._get_cache_key(-22.9068, -43.1729)
+        client._station_cache[cache_key]["timestamp"] = time.time() - 10800
+
+        # Second call should return last successful result despite error
+        result2 = await client.get_nearest_station(-22.9068, -43.1729)
+        assert result2 is not None
+        assert result2 == success_data
