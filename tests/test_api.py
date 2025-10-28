@@ -174,12 +174,13 @@ async def test_get_nearest_station_success(temp_cache_dir):
     mock_geocode_response = AsyncMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value={
-            "3304557": {
-                "centroide": {"lat": -22.9068, "lon": -43.1729},
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",
                 "nome": "Rio de Janeiro",
             }
-        }
+        ]
     )
 
     # Mock station response
@@ -218,12 +219,13 @@ async def test_get_nearest_station_cache_hit(temp_cache_dir):
     mock_geocode_response = AsyncMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value={
-            "3304557": {
-                "centroide": {"lat": -22.9068, "lon": -43.1729},
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",
                 "nome": "Rio de Janeiro",
             }
-        }
+        ]
     )
 
     # Mock station response
@@ -270,12 +272,13 @@ async def test_get_nearest_station_cache_expiration(temp_cache_dir):
     mock_geocode_response = AsyncMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value={
-            "3304557": {
-                "centroide": {"lat": -22.9068, "lon": -43.1729},
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",
                 "nome": "Rio de Janeiro",
             }
-        }
+        ]
     )
 
     # Mock station response
@@ -342,12 +345,13 @@ async def test_get_nearest_station_error(temp_cache_dir):
     mock_geocode_response = AsyncMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value={
-            "3304557": {
-                "centroide": {"lat": -22.9068, "lon": -43.1729},
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",
                 "nome": "Rio de Janeiro",
             }
-        }
+        ]
     )
 
     # Mock station error response
@@ -448,12 +452,13 @@ async def test_get_nearest_station_fallback_on_error_after_cache_expiry(temp_cac
     mock_geocode_response = AsyncMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value={
-            "3304557": {
-                "centroide": {"lat": -22.9068, "lon": -43.1729},
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",
                 "nome": "Rio de Janeiro",
             }
-        }
+        ]
     )
 
     # First successful station response
