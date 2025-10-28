@@ -1,7 +1,5 @@
 """Tests for geographic utilities."""
 
-import pytest
-
 from custom_components.inmet_weather.geo_utils import (
     get_geojson_file_path,
     is_geojson_available,
