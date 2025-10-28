@@ -159,7 +159,8 @@ jobs:
 
           ${PR_BODY}
 
-          ## Commits 
+          ## Commits
+          .
 
           EOF
           )
@@ -168,7 +169,7 @@ jobs:
           if [ "${LATEST_TAG}" != "v0.0.0" ]; then
             COMMITS=$(git log ${LATEST_TAG}..HEAD --oneline --no-merges)
              
-            CHANGELOG="${CHANGELOG}\n${COMMITS} "
+            CHANGELOG="${CHANGELOG}\n${COMMITS}"
           fi
 
           # Save to file for GitHub release
