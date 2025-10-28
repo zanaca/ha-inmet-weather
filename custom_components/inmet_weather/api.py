@@ -8,7 +8,7 @@ import math
 import os
 import tempfile
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional,List
 
 import aiohttp
 import async_timeout
@@ -181,7 +181,7 @@ class InmetApiClient:
             )
 
     def _find_nearest_from_api_data(
-        self, data: Dict[str, Any], latitude: float, longitude: float
+        self, data: List[Dict[str, Any]], latitude: float, longitude: float
     ) -> Optional[str]:
         """Find nearest location from Previsao_Portal API data."""
         try:
@@ -190,8 +190,9 @@ class InmetApiClient:
 
             # The API returns a dictionary with geocodes as keys
             # Each entry should have centroide with lat/lon
-            for geocode, location_data in data.items():
-                if isinstance(location_data, dict) and "centroide" in location_data:
+            for location_data in data:
+                if isinstance(location_data, dict) and "centroide" in location_data and "geocode" in location_data:
+                    geocode = location_data["geocode"]
                     centroide = location_data["centroide"]
 
                     # Extract coordinates from centroide
