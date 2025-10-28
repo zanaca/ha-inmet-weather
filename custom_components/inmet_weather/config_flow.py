@@ -11,6 +11,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .api import InmetApiClient
 from .const import DOMAIN
+from .geo_utils import is_in_brazil
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,34 +33,43 @@ class InmetWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
             name = user_input.get(CONF_NAME, "INMET Weather")
 
-            # Validate the coordinates by trying to fetch data
-            try:
-                session = aiohttp_client.async_get_clientsession(self.hass)
-                client = InmetApiClient(session)
+            # First, check if coordinates are within Brazil
+            if not is_in_brazil(latitude, longitude):
+                errors["base"] = "outside_brazil"
+                _LOGGER.warning(
+                    "Coordinates (%.4f, %.4f) are outside Brazil's boundaries",
+                    latitude,
+                    longitude,
+                )
+            else:
+                # Validate the coordinates by trying to fetch data
+                try:
+                    session = aiohttp_client.async_get_clientsession(self.hass)
+                    client = InmetApiClient(session)
 
-                # Try to get the geocode
-                geocode = await client.get_geocode_from_coordinates(latitude, longitude)
+                    # Try to get the geocode
+                    geocode = await client.get_geocode_from_coordinates(latitude, longitude)
 
-                if geocode:
-                    # Create a unique ID based on coordinates
-                    await self.async_set_unique_id(f"{latitude}_{longitude}")
-                    self._abort_if_unique_id_configured()
+                    if geocode:
+                        # Create a unique ID based on coordinates
+                        await self.async_set_unique_id(f"{latitude}_{longitude}")
+                        self._abort_if_unique_id_configured()
 
-                    return self.async_create_entry(
-                        title=name,
-                        data={
-                            CONF_NAME: name,
-                            CONF_LATITUDE: latitude,
-                            CONF_LONGITUDE: longitude,
-                            "geocode": geocode,
-                        },
-                    )
-                else:
-                    errors["base"] = "cannot_connect"
+                        return self.async_create_entry(
+                            title=name,
+                            data={
+                                CONF_NAME: name,
+                                CONF_LATITUDE: latitude,
+                                CONF_LONGITUDE: longitude,
+                                "geocode": geocode,
+                            },
+                        )
+                    else:
+                        errors["base"] = "cannot_connect"
 
-            except Exception as err:
-                _LOGGER.exception("Unexpected exception: %s", err)
-                errors["base"] = "unknown"
+                except Exception as err:
+                    _LOGGER.exception("Unexpected exception: %s", err)
+                    errors["base"] = "unknown"
 
         # Show form
         return self.async_show_form(

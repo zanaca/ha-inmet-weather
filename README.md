@@ -149,6 +149,8 @@ If you encounter any issues or have suggestions, please [open an issue](https://
 
 Weather data provided by [INMET - Instituto Nacional de Meteorologia](https://portal.inmet.gov.br/).
 
+Brazil's GeoJSON data provided by [GADM](https://gadm.org/)
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.

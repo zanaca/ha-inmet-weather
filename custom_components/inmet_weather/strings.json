@@ -13,6 +13,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to INMET API",
+      "outside_brazil": "The provided coordinates are outside Brazil's boundaries. INMET only provides weather data for locations within Brazil.",
       "unknown": "Unexpected error occurred"
     },
     "abort": {
