@@ -48,7 +48,9 @@ class InmetWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     client = InmetApiClient(session)
 
                     # Try to get the geocode
-                    geocode = await client.get_geocode_from_coordinates(latitude, longitude)
+                    geocode = await client.get_geocode_from_coordinates(
+                        latitude, longitude
+                    )
 
                     if geocode:
                         # Create a unique ID based on coordinates

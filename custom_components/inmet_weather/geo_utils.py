@@ -32,7 +32,9 @@ def _point_in_polygon(point: Tuple[float, float], polygon: List[List[float]]) ->
         if y > min(p1y, p2y):
             if y <= max(p1y, p2y):
                 if x <= max(p1x, p2x):
-                    xinters = float('inf')  # Default value
+                    xinters = float(
+                        "inf"
+                    )  # Handles degenerate case when edge is horizontal (p1y == p2y)
                     if p1y != p2y:
                         xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
                     if p1x == p2x or x <= xinters:
@@ -89,9 +91,8 @@ def _load_brazil_geometry():
             geojson_data = json.load(f)
 
         # Extract the first feature (Brazil's geometry)
-        if (
-            geojson_data.get("type") == "FeatureCollection"
-            and geojson_data.get("features")
+        if geojson_data.get("type") == "FeatureCollection" and geojson_data.get(
+            "features"
         ):
             feature = geojson_data["features"][0]
             geometry = feature.get("geometry")
