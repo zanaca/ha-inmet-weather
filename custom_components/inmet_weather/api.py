@@ -188,8 +188,8 @@ class InmetApiClient:
             min_distance = float("inf")
             closest_geocode = None
 
-            # The API returns a list of dictionary with geocodes as keys
-            # Each entry should have centroide with lat/lon
+            # The API returns a list of dictionaries, each with a 'geocode' field and
+            # a 'centroide' field as a comma-separated "lon,lat" string.
             for location_data in data:
                 if isinstance(location_data, dict) and "centroide" in location_data:
                     centroide: List[str] = location_data["centroide"].split(",")
