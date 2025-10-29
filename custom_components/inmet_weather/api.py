@@ -8,7 +8,7 @@ import math
 import os
 import tempfile
 import time
-from typing import Any, Dict, Optional,List
+from typing import Any, Dict, Optional, List
 
 import aiohttp
 import async_timeout
@@ -188,17 +188,17 @@ class InmetApiClient:
             min_distance = float("inf")
             closest_geocode = None
 
-            # The API returns a dictionary with geocodes as keys
-            # Each entry should have centroide with lat/lon
+            # The API returns a list of dictionaries, each with a 'geocode' field and
+            # a 'centroide' field as a comma-separated "lon,lat" string.
             for location_data in data:
-                if isinstance(location_data, dict) and "centroide" in location_data and "geocode" in location_data:
+                if isinstance(location_data, dict) and "centroide" in location_data:
+                    centroide: List[str] = location_data["centroide"].split(",")
                     geocode = location_data["geocode"]
-                    centroide = location_data["centroide"]
 
                     # Extract coordinates from centroide
-                    if "lat" in centroide and "lon" in centroide:
-                        loc_lat = float(centroide["lat"])
-                        loc_lon = float(centroide["lon"])
+                    if len(centroide) == 2:
+                        loc_lat = float(centroide[1])
+                        loc_lon = float(centroide[0])
 
                         distance = self.calculate_distance(
                             latitude, longitude, loc_lat, loc_lon

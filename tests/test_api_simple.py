@@ -180,15 +180,17 @@ async def test_get_nearest_station_success(temp_cache_dir):
     session = MagicMock()
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
-    # Mock geocode response
+    # Mock geocode response (matches actual API structure - list of dicts)
     mock_geocode_response = MagicMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value=[{
-            "geocode": "3304557",
-            "centroide": {"lat": -22.9068, "lon": -43.1729},
-            "nome": "Rio de Janeiro",
-        }]
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",  # lon,lat as string
+                "nome": "Rio de Janeiro",
+            }
+        ]
     )
 
     # Mock station response
@@ -229,15 +231,17 @@ async def test_get_nearest_station_cache_hit(temp_cache_dir):
     session = MagicMock()
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
-    # Mock geocode response
+    # Mock geocode response (matches actual API structure - list of dicts)
     mock_geocode_response = MagicMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value=[{
-            "geocode": "3304557",
-            "centroide": {"lat": -22.9068, "lon": -43.1729},
-            "nome": "Rio de Janeiro",
-        }]
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",  # lon,lat as string
+                "nome": "Rio de Janeiro",
+            }
+        ]
     )
 
     # Mock station response
@@ -285,15 +289,17 @@ async def test_get_nearest_station_cache_expiration(temp_cache_dir):
     session = MagicMock()
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
-    # Mock geocode response
+    # Mock geocode response (matches actual API structure - list of dicts)
     mock_geocode_response = MagicMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value=[{
-            "geocode": "3304557",
-            "centroide": {"lat": -22.9068, "lon": -43.1729},
-            "nome": "Rio de Janeiro",
-        }]
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",  # lon,lat as string
+                "nome": "Rio de Janeiro",
+            }
+        ]
     )
 
     # Mock station response
@@ -364,16 +370,17 @@ async def test_get_nearest_station_error(temp_cache_dir):
     session = MagicMock()
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
-    # Mock geocode response
+    # Mock geocode response (matches actual API structure - list of dicts)
     mock_geocode_response = MagicMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value={
-            "3304557": {
-                "centroide": {"lat": -22.9068, "lon": -43.1729},
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",  # lon,lat as string
                 "nome": "Rio de Janeiro",
             }
-        }
+        ]
     )
 
     # Mock station error response
@@ -487,15 +494,17 @@ async def test_get_nearest_station_fallback_on_error(temp_cache_dir):
     session = MagicMock()
     client = InmetApiClient(session, cache_dir=temp_cache_dir)
 
-    # Mock geocode response
+    # Mock geocode response (matches actual API structure - list of dicts)
     mock_geocode_response = MagicMock()
     mock_geocode_response.status = 200
     mock_geocode_response.json = AsyncMock(
-        return_value=[{
-            "geocode": "3304557",
-            "centroide": {"lat": -22.9068, "lon": -43.1729},
-            "nome": "Rio de Janeiro",
-        }]
+        return_value=[
+            {
+                "geocode": "3304557",
+                "centroide": "-43.1729,-22.9068",  # lon,lat as string
+                "nome": "Rio de Janeiro",
+            }
+        ]
     )
 
     # First successful station response

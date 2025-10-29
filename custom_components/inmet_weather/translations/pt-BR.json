@@ -13,6 +13,7 @@
     },
     "error": {
       "cannot_connect": "Falha ao conectar à API do INMET",
+      "outside_brazil": "As coordenadas fornecidas estão fora dos limites do Brasil. O INMET fornece dados meteorológicos apenas para localizações dentro do Brasil.",
       "unknown": "Erro inesperado ocorreu"
     },
     "abort": {
