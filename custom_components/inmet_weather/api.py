@@ -1,19 +1,13 @@
 """INMET Weather API Client."""
 
-import asyncio
 from datetime import datetime
-import json
 import logging
 import math
-import os
-import tempfile
 import time
 from typing import Any, Dict, Optional, List
 
 import aiohttp
 import async_timeout
-
-from .const import GEOCODE_CACHE_FILE
 
 _LOGGER = logging.getLogger(__name__)
 

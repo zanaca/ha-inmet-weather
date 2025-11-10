@@ -6,9 +6,6 @@ DEFAULT_NAME = "INMET Weather"
 # Update interval in seconds (every 30 minutes)
 UPDATE_INTERVAL = 1800
 
-# Geocode cache settings
-GEOCODE_CACHE_FILE = ".inmet_geocode_cache.json"
-
 # Conditions
 CONDITION_SUNNY = "sunny"
 CONDITION_CLEAR_NIGHT = "clear-night"
