@@ -34,7 +34,7 @@ class InmetWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = user_input.get(CONF_NAME, "INMET Weather")
 
             # First, check if coordinates are within Brazil
-            if not is_in_brazil(latitude, longitude):
+            if not await is_in_brazil(latitude, longitude):
                 errors["base"] = "outside_brazil"
                 _LOGGER.warning(
                     "Coordinates (%.4f, %.4f) are outside Brazil's boundaries",

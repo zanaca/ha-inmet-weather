@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Standalone test for Brazil boundary validation."""
 
+import asyncio
 import sys
 import importlib.util
 
@@ -17,7 +18,7 @@ is_geojson_available = geo_utils.is_geojson_available
 get_geojson_file_path = geo_utils.get_geojson_file_path
 
 
-def test_boundaries():
+async def test_boundaries():
     """Test boundary validation with various coordinates."""
     print("=" * 60)
     print("Testing Brazil Boundary Validation (GeoJSON)")
@@ -25,9 +26,10 @@ def test_boundaries():
 
     # Check if GeoJSON is available
     print(f"\nGeoJSON file: {get_geojson_file_path()}")
-    print(f"GeoJSON available: {is_geojson_available()}")
+    geojson_available = await is_geojson_available()
+    print(f"GeoJSON available: {geojson_available}")
 
-    if not is_geojson_available():
+    if not geojson_available:
         print("ERROR: GeoJSON file not available!")
         return 1
 
@@ -43,7 +45,7 @@ def test_boundaries():
 
     all_valid_passed = True
     for name, lat, lon in test_cases_valid:
-        result = is_in_brazil(lat, lon)
+        result = await is_in_brazil(lat, lon)
         status = "✓" if result else "✗"
         if not result:
             all_valid_passed = False
@@ -61,7 +63,7 @@ def test_boundaries():
 
     all_invalid_passed = True
     for name, lat, lon in test_cases_invalid:
-        result = is_in_brazil(lat, lon)
+        result = await is_in_brazil(lat, lon)
         status = "✓" if not result else "✗"
         if result:
             all_invalid_passed = False
@@ -81,7 +83,7 @@ def test_boundaries():
 
 if __name__ == "__main__":
     try:
-        sys.exit(test_boundaries())
+        sys.exit(asyncio.run(test_boundaries()))
     except Exception as e:
         print(f"\n✗ Error: {e}")
         import traceback

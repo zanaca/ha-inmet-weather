@@ -1,15 +1,18 @@
 """Geographic utilities for INMET Weather integration."""
 
+import asyncio
 import json
 import logging
 import os
-from functools import lru_cache
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 _LOGGER = logging.getLogger(__name__)
 
 # Path to the GeoJSON file containing Brazil's boundaries
 _GEOJSON_FILE = os.path.join(os.path.dirname(__file__), "gadm41_BRA_0.json")
+
+# Cache for Brazil geometry data
+_CACHED_GEOMETRY: Optional[dict] = None
 
 
 def _point_in_polygon(point: Tuple[float, float], polygon: List[List[float]]) -> bool:
@@ -78,9 +81,8 @@ def _point_in_multipolygon(
     return False
 
 
-@lru_cache(maxsize=1)
-def _load_brazil_geometry():
-    """Load and cache Brazil's geometry from GeoJSON file.
+def _load_brazil_geometry_sync():
+    """Load Brazil's geometry from GeoJSON file (sync version).
 
     Returns:
         Dictionary with geometry type and coordinates,
@@ -117,7 +119,24 @@ def _load_brazil_geometry():
         return None
 
 
-def is_in_brazil(latitude: float, longitude: float) -> bool:
+async def _load_brazil_geometry():
+    """Load and cache Brazil's geometry from GeoJSON file.
+
+    Returns:
+        Dictionary with geometry type and coordinates,
+        or None if file cannot be loaded
+    """
+    global _CACHED_GEOMETRY
+
+    if _CACHED_GEOMETRY is not None:
+        return _CACHED_GEOMETRY
+
+    # Run the blocking file I/O in a thread pool executor
+    _CACHED_GEOMETRY = await asyncio.to_thread(_load_brazil_geometry_sync)
+    return _CACHED_GEOMETRY
+
+
+async def is_in_brazil(latitude: float, longitude: float) -> bool:
     """Check if the given coordinates are within Brazil's boundaries.
 
     Uses the official GADM boundary data for accurate point-in-polygon testing.
@@ -130,7 +149,7 @@ def is_in_brazil(latitude: float, longitude: float) -> bool:
     Returns:
         True if coordinates are within Brazil's boundaries, False otherwise
     """
-    geometry = _load_brazil_geometry()
+    geometry = await _load_brazil_geometry()
 
     if geometry is None:
         _LOGGER.warning(
@@ -193,11 +212,11 @@ def get_geojson_file_path() -> str:
     return os.path.abspath(_GEOJSON_FILE)
 
 
-def is_geojson_available() -> bool:
+async def is_geojson_available() -> bool:
     """Check if the GeoJSON file is available and valid.
 
     Returns:
         True if GeoJSON file exists and can be loaded, False otherwise
     """
-    geometry = _load_brazil_geometry()
+    geometry = await _load_brazil_geometry()
     return geometry is not None
