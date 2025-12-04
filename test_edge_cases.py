@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Test edge cases for Brazil boundary validation."""
 
+import asyncio
 import sys
 import importlib.util
 
@@ -14,7 +15,7 @@ spec.loader.exec_module(geo_utils)
 
 is_in_brazil = geo_utils.is_in_brazil
 
-def test_edge_cases():
+async def test_edge_cases():
     """Test various edge cases."""
     print("=" * 60)
     print("Testing Edge Cases")
@@ -42,7 +43,7 @@ def test_edge_cases():
     failed = 0
 
     for name, lat, lon, expected in test_cases:
-        result = is_in_brazil(lat, lon)
+        result = await is_in_brazil(lat, lon)
         status = "✓" if result == expected else "✗"
 
         if result == expected:
@@ -64,7 +65,7 @@ def test_edge_cases():
 
 if __name__ == "__main__":
     try:
-        sys.exit(test_edge_cases())
+        sys.exit(asyncio.run(test_edge_cases()))
     except Exception as e:
         print(f"\n✗ Error: {e}")
         import traceback
