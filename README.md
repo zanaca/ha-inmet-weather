@@ -153,4 +153,4 @@ Brazil's GeoJSON data provided by [GADM](https://gadm.org/).
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details. 
