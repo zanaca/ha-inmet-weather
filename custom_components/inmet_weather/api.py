@@ -41,6 +41,12 @@ class InmetApiClient:
         self._last_successful_current_weather: Dict[str, Any] = {}
         self._last_successful_forecast: Dict[str, Any] = {}
         self._last_successful_station: Dict[str, Any] = {}
+        
+        # Default headers for all requests
+        self._default_headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        }
 
     def _get_cache_key(self, latitude: float, longitude: float) -> str:
         """Generate cache key from coordinates (rounded to 2 decimal places)."""
@@ -86,6 +92,7 @@ class InmetApiClient:
                         "tipo": "turno",
                         "turno": "tarde",
                     },
+                    headers=self._default_headers,
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -266,7 +273,7 @@ class InmetApiClient:
         try:
             async with async_timeout.timeout(TIMEOUT):
                 url = f"{API_BASE_URL}/estacao/proxima/{geocode}"
-                async with self._session.get(url) as response:
+                async with self._session.get(url, headers=self._default_headers) as response:
                     if response.status != 200:
                         _LOGGER.error(
                             "Error fetching current weather: %s", response.status
@@ -304,7 +311,7 @@ class InmetApiClient:
         try:
             async with async_timeout.timeout(TIMEOUT):
                 url = f"{API_BASE_URL}/previsao/{geocode}"
-                async with self._session.get(url) as response:
+                async with self._session.get(url, headers=self._default_headers) as response:
                     if response.status != 200:
                         _LOGGER.error("Error fetching forecast: %s", response.status)
                         # Return last successful result if available
