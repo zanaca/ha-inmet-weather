@@ -17,6 +17,11 @@ LOG_MESSAGE_USING_LAST_SUCCESSFUL_STATION = (
     "Using last successful station data for coordinates (%.2f, %.2f) due to exception"
 )
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+}
+
 
 class InmetApiClient:
     """INMET API Client."""
@@ -86,6 +91,7 @@ class InmetApiClient:
                         "tipo": "turno",
                         "turno": "tarde",
                     },
+                    headers=HEADERS,
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -190,12 +196,6 @@ class InmetApiClient:
                     longitude,
                 )
 
-        # First, we need to find the geocode
-        # Since we don't have a direct endpoint, we'll use a heuristic approach
-        # In a real implementation, you would cache a list of known geocodes and coordinates
-
-        # For now, let's calculate distance to known locations
-        # This is a simplified implementation
         geocode = await self.get_geocode_from_coordinates(latitude, longitude)
 
         if not geocode:
@@ -212,7 +212,7 @@ class InmetApiClient:
         try:
             async with async_timeout.timeout(TIMEOUT):
                 url = f"{API_BASE_URL}/estacao/proxima/{geocode}"
-                async with self._session.get(url) as response:
+                async with self._session.get(url, headers=HEADERS) as response:
                     if response.status != 200:
                         _LOGGER.error(
                             "Error fetching station data: %s", response.status
@@ -266,7 +266,7 @@ class InmetApiClient:
         try:
             async with async_timeout.timeout(TIMEOUT):
                 url = f"{API_BASE_URL}/estacao/proxima/{geocode}"
-                async with self._session.get(url) as response:
+                async with self._session.get(url, headers=HEADERS) as response:
                     if response.status != 200:
                         _LOGGER.error(
                             "Error fetching current weather: %s", response.status
@@ -304,7 +304,7 @@ class InmetApiClient:
         try:
             async with async_timeout.timeout(TIMEOUT):
                 url = f"{API_BASE_URL}/previsao/{geocode}"
-                async with self._session.get(url) as response:
+                async with self._session.get(url, headers=HEADERS) as response:
                     if response.status != 200:
                         _LOGGER.error("Error fetching forecast: %s", response.status)
                         # Return last successful result if available
